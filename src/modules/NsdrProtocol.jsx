@@ -54,13 +54,15 @@ function pickVoice() {
   return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
 }
 
-function speak(text, voiceVolume = 0.7) {
+function speak(text, voiceVolume = 0.7, voiceURI = '') {
   return new Promise((resolve) => {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.75;
     u.pitch = 0.85;
     u.volume = Math.min(1, voiceVolume);
-    const voice = pickVoice();
+    const voices = speechSynthesis.getVoices();
+    const selected = voiceURI ? voices.find(v => v.voiceURI === voiceURI) : null;
+    const voice = selected || pickVoice();
     if (voice) u.voice = voice;
     u.onend = resolve;
     u.onerror = resolve;
@@ -139,6 +141,24 @@ export default function NsdrProtocol() {
   const [ambientOn, setAmbientOn] = useState(true);
   const [voiceVol, setVoiceVol] = useState(0.6);
   const [ambientVol, setAmbientVol] = useState(0.3);
+  const [voices, setVoices] = useState([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
+
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+      setVoices(v);
+      if (!selectedVoiceURI && v.length > 0) {
+        // Auto-pick a calm voice
+        const preferred = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Google UK English Female', 'Microsoft Zira'];
+        const pick = v.find(voice => preferred.some(p => voice.name.includes(p))) || v[0];
+        if (pick) setSelectedVoiceURI(pick.voiceURI);
+      }
+    };
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
 
   const activeRef = useRef(false);
   const startTimeRef = useRef(0);
@@ -188,13 +208,13 @@ export default function NsdrProtocol() {
     for (let i = 0; i < segments.length; i++) {
       if (!activeRef.current) break;
       setCurrentText(segments[i].text);
-      await speak(segments[i].text, voiceVol);
+      await speak(segments[i].text, voiceVol, selectedVoiceURI);
       if (!activeRef.current) break;
       await new Promise(r => setTimeout(r, segments[i].pause * 1000 * scale));
     }
 
     if (activeRef.current) stopSessionClean();
-  }, [duration, ambientOn, ambientVol, voiceVol, startSession, startNsdr]);
+  }, [duration, ambientOn, ambientVol, voiceVol, selectedVoiceURI, startSession, startNsdr]);
 
   const stopSessionClean = useCallback(() => {
     activeRef.current = false;
@@ -273,7 +293,7 @@ export default function NsdrProtocol() {
           {/* Volume sliders */}
           <div style={{
             background: '#111116', borderRadius: 12, padding: 16,
-            border: '1px solid #1e1e26', marginBottom: 20,
+            border: '1px solid #1e1e26', marginBottom: 16,
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             <VolumeSlider label="Voice guide" value={voiceVol} onChange={setVoiceVol} color={COLOR} />
@@ -281,6 +301,51 @@ export default function NsdrProtocol() {
               <VolumeSlider label="Ambient soundscape" value={ambientVol} onChange={setAmbientVol} color={COLOR} />
             )}
           </div>
+
+          {/* Voice selector */}
+          {voices.length > 0 && (
+            <div style={{
+              background: '#111116', borderRadius: 12, padding: 16,
+              border: '1px solid #1e1e26', marginBottom: 20,
+            }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Voice
+              </label>
+              <select
+                value={selectedVoiceURI}
+                onChange={e => setSelectedVoiceURI(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 8,
+                  background: '#0d0d14', border: '1px solid #252530',
+                  color: '#ccc', fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+                  appearance: 'none', cursor: 'pointer',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                {voices.map(v => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  speechSynthesis.cancel();
+                  speak('This is how your guided session will sound.', voiceVol, selectedVoiceURI);
+                }}
+                style={{
+                  marginTop: 8, padding: '6px 14px', borderRadius: 6,
+                  background: 'none', border: `1px solid ${COLOR}30`,
+                  color: COLOR, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Preview voice
+              </button>
+            </div>
+          )}
         </>
       )}
 

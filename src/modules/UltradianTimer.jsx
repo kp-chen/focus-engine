@@ -335,9 +335,9 @@ export default function UltradianTimer() {
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
             Kleitman's BRAC model (1963). Focus ratings over time help you discover your personal optimal cycle length.{' '}
-            <a href="https://pubmed.ncbi.nlm.nih.gov/14078944/" target="_blank" rel="noopener noreferrer"
+            <a href="https://en.wikipedia.org/wiki/Basic_rest%E2%80%93activity_cycle" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
-              Kleitman (1963) →
+              BRAC overview →
             </a>
           </div>
         </div>
