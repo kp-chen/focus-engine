@@ -281,7 +281,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {modules.map(m => (
             <ModuleRow key={m.id} {...m} color={MODULE_COLORS[m.id]}
-              streak={state.streaks[m.id]} todayTime={getTodayTotal(m.id)}
+              streak={state.streaks[m.id] || { current: 0, best: 0, lastDate: null }} todayTime={getTodayTotal(m.id)}
               onClick={() => navigate(m.path)} />
           ))}
         </div>

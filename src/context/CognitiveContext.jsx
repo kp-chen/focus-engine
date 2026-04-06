@@ -9,7 +9,12 @@ function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const saved = JSON.parse(raw);
+    // Merge streaks with defaults so new modules don't crash
+    if (saved && saved.streaks) {
+      saved.streaks = { ...defaultStreaks, ...saved.streaks };
+    }
+    return saved;
   } catch { return null; }
 }
 
@@ -19,17 +24,19 @@ function saveState(state) {
   } catch (e) { console.warn('Storage save failed:', e); }
 }
 
+const defaultStreaks = {
+  focus: { current: 0, best: 0, lastDate: null },
+  breathe: { current: 0, best: 0, lastDate: null },
+  nback: { current: 0, best: 0, lastDate: null },
+  nsdr: { current: 0, best: 0, lastDate: null },
+  timer: { current: 0, best: 0, lastDate: null },
+  bilateral: { current: 0, best: 0, lastDate: null },
+};
+
 // Initial state
 const defaultState = {
-  sessions: [],        // Array of { id, module, startedAt, endedAt, duration, data }
-  streaks: {           // Per-module streak tracking
-    focus: { current: 0, best: 0, lastDate: null },
-    breathe: { current: 0, best: 0, lastDate: null },
-    nback: { current: 0, best: 0, lastDate: null },
-    nsdr: { current: 0, best: 0, lastDate: null },
-    timer: { current: 0, best: 0, lastDate: null },
-    bilateral: { current: 0, best: 0, lastDate: null },
-  },
+  sessions: [],
+  streaks: { ...defaultStreaks },
   settings: {
     volume: 0.7,
     haptics: true,
