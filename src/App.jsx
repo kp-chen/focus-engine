@@ -9,6 +9,7 @@ import BreathworkStudio from './modules/BreathworkStudio';
 import DualNBack from './modules/DualNBack';
 import NsdrProtocol from './modules/NsdrProtocol';
 import UltradianTimer from './modules/UltradianTimer';
+import BilateralStimulation from './modules/BilateralStimulation';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/nback" element={<DualNBack />} />
               <Route path="/nsdr" element={<NsdrProtocol />} />
               <Route path="/timer" element={<UltradianTimer />} />
+              <Route path="/bilateral" element={<BilateralStimulation />} />
             </Routes>
             <NowPlaying />
             <TabBar />

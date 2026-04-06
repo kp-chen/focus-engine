@@ -25,9 +25,9 @@ export default function TabBar() {
       <div style={{
         display: 'flex',
         justifyContent: 'space-around',
-        maxWidth: 600,
+        maxWidth: 640,
         margin: '0 auto',
-        padding: '6px 4px 4px',
+        padding: '5px 2px 3px',
       }}>
         {TABS.map(tab => {
           const isActive = tab.id === activeTab.id;
@@ -65,7 +65,7 @@ export default function TabBar() {
                 }} />
               )}
               <span style={{
-                fontSize: 20,
+                fontSize: 18,
                 lineHeight: 1,
                 transition: 'transform 0.2s',
                 transform: isActive ? 'scale(1.15)' : 'scale(1)',
@@ -73,7 +73,7 @@ export default function TabBar() {
                 {tab.icon}
               </span>
               <span style={{
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isActive ? 600 : 400,
                 letterSpacing: '0.02em',
               }}>

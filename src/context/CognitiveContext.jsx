@@ -28,6 +28,7 @@ const defaultState = {
     nback: { current: 0, best: 0, lastDate: null },
     nsdr: { current: 0, best: 0, lastDate: null },
     timer: { current: 0, best: 0, lastDate: null },
+    bilateral: { current: 0, best: 0, lastDate: null },
   },
   settings: {
     volume: 0.7,
