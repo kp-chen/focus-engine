@@ -3,19 +3,8 @@ import { CognitiveProvider } from './context/CognitiveContext';
 import TabBar from './components/TabBar';
 import Dashboard from './modules/Dashboard';
 import FocusEngine from './modules/FocusEngine';
+import BreathworkStudio from './modules/BreathworkStudio';
 import PlaceholderModule from './components/PlaceholderModule';
-
-function BreathePage() {
-  return (
-    <PlaceholderModule
-      id="breathe"
-      title="Breathwork"
-      icon="◠"
-      description="Guided cyclic physiological sighing — double inhale through nose, long exhale through mouth. 5 minutes daily."
-      science="Balban et al. (2023), Cell Reports Medicine: 5 min/day cyclic sighing reduced anxiety and improved mood more effectively than mindfulness meditation over 28 days (n=108 RCT)."
-    />
-  );
-}
 
 function NBackPage() {
   return (
@@ -61,7 +50,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/focus" element={<FocusEngine />} />
-            <Route path="/breathe" element={<BreathePage />} />
+            <Route path="/breathe" element={<BreathworkStudio />} />
             <Route path="/nback" element={<NBackPage />} />
             <Route path="/nsdr" element={<NsdrPage />} />
             <Route path="/timer" element={<TimerPage />} />
