@@ -71,6 +71,170 @@ function Grid({ activeCell, showFeedback, feedbackType }) {
   );
 }
 
+// Animated tutorial walkthrough
+const TUTORIAL_STEPS = [
+  {
+    title: 'The grid',
+    desc: 'Each trial, a square lights up on this 3×3 grid. This is the position stimulus.',
+    grid: 4, letter: '', highlight: 'grid',
+  },
+  {
+    title: 'The letter',
+    desc: 'At the same time, you hear a letter spoken aloud. This is the audio stimulus.',
+    grid: -1, letter: 'K', highlight: 'letter',
+  },
+  {
+    title: 'Both together',
+    desc: 'Each trial has BOTH a position and a letter. You need to track both simultaneously.',
+    grid: 7, letter: 'S', highlight: 'both',
+  },
+  {
+    title: 'The N-back rule',
+    desc: 'Your job: compare the CURRENT trial to the one N steps ago. In 2-back, compare to 2 trials ago.',
+    grid: -1, letter: '', highlight: 'none',
+  },
+  {
+    title: 'Position match example',
+    desc: 'Trial 1: position = top-left. Trial 2: position = center. Trial 3: position = top-left again. Trial 3 matches Trial 1 (2 steps ago) → tap Position!',
+    grid: 0, letter: '', highlight: 'pos', sequence: [
+      { pos: 0, letter: 'H', label: 'Trial 1' },
+      { pos: 4, letter: 'R', label: 'Trial 2' },
+      { pos: 0, letter: 'K', label: 'Trial 3 — Match!' },
+    ],
+  },
+  {
+    title: 'Audio match example',
+    desc: 'Trial 1: letter = "H". Trial 2: letter = "R". Trial 3: letter = "H" again. Trial 3 matches Trial 1 → tap Audio!',
+    grid: -1, letter: 'H', highlight: 'aud',
+  },
+  {
+    title: 'Both can match',
+    desc: 'Position and audio are independent. Both, one, or neither might match on any given trial. Tap whichever buttons apply.',
+    grid: -1, letter: '', highlight: 'none',
+  },
+  {
+    title: 'Ready!',
+    desc: 'Don\'t worry about mistakes — accuracy improves with practice. Most people start around 50-60% and improve over days.',
+    grid: -1, letter: '', highlight: 'none',
+  },
+];
+
+function Tutorial({ nLevel, onDone }) {
+  const [step, setStep] = useState(0);
+  const [seqIndex, setSeqIndex] = useState(0);
+  const s = TUTORIAL_STEPS[step];
+  const hasSeq = s.sequence && s.sequence.length > 0;
+
+  // Auto-animate sequence steps
+  useEffect(() => {
+    if (!hasSeq) return;
+    setSeqIndex(0);
+    const iv = setInterval(() => {
+      setSeqIndex(i => {
+        const next = i + 1;
+        return next >= s.sequence.length ? 0 : next;
+      });
+    }, 1500);
+    return () => clearInterval(iv);
+  }, [step, hasSeq]);
+
+  const activePos = hasSeq ? s.sequence[seqIndex].pos : s.grid;
+  const activeLetter = hasSeq ? s.sequence[seqIndex].letter : s.letter;
+  const seqLabel = hasSeq ? s.sequence[seqIndex].label : '';
+
+  return (
+    <div style={{
+      background: '#111116', borderRadius: 16, padding: 24,
+      border: '1px solid #1e1e26',
+    }}>
+      {/* Progress dots */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
+        {TUTORIAL_STEPS.map((_, i) => (
+          <div key={i} style={{
+            width: i === step ? 20 : 8, height: 8, borderRadius: 4,
+            background: i === step ? COLOR : i < step ? COLOR + '60' : '#252530',
+            transition: 'all 0.3s',
+          }} />
+        ))}
+      </div>
+
+      {/* Title */}
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#e8e8ec', marginBottom: 6 }}>{s.title}</div>
+        <div style={{ fontSize: 13, color: '#888', lineHeight: 1.6, padding: '0 8px' }}>{s.desc}</div>
+      </div>
+
+      {/* Demo grid */}
+      {(activePos >= 0 || activeLetter) && (
+        <div style={{ marginBottom: 16 }}>
+          {activeLetter && (
+            <div style={{
+              textAlign: 'center', fontSize: 28, fontWeight: 700,
+              fontFamily: "'JetBrains Mono', monospace",
+              color: COLOR, marginBottom: 12, height: 36,
+            }}>
+              {activeLetter}
+            </div>
+          )}
+          {activePos >= 0 && (
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 6, width: 150, height: 150, margin: '0 auto',
+            }}>
+              {Array.from({ length: 9 }, (_, i) => (
+                <div key={i} style={{
+                  borderRadius: 8,
+                  background: i === activePos ? COLOR : '#1a1a22',
+                  border: `1px solid ${i === activePos ? COLOR + '80' : '#252530'}`,
+                  boxShadow: i === activePos ? `0 0 12px ${COLOR}40` : 'none',
+                  transition: 'all 0.3s',
+                }} />
+              ))}
+            </div>
+          )}
+          {seqLabel && (
+            <div style={{
+              textAlign: 'center', marginTop: 10, fontSize: 12, fontWeight: 600,
+              color: seqLabel.includes('Match') ? '#4a4' : '#888',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              {seqLabel}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Nav buttons */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+        {step > 0 && (
+          <button onClick={() => setStep(step - 1)} style={{
+            flex: 1, padding: '12px', borderRadius: 10,
+            background: '#1a1a22', border: '1px solid #252530',
+            color: '#888', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>Back</button>
+        )}
+        {step < TUTORIAL_STEPS.length - 1 ? (
+          <button onClick={() => setStep(step + 1)} style={{
+            flex: 2, padding: '12px', borderRadius: 10,
+            background: COLOR + '20', border: `1px solid ${COLOR}40`,
+            color: '#e8e8ec', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>Next</button>
+        ) : (
+          <button onClick={onDone} style={{
+            flex: 2, padding: '12px', borderRadius: 10,
+            background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
+            border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: `0 4px 16px ${COLOR}30`,
+          }}>Got it — back to setup</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Response button
 function ResponseButton({ label, sublabel, active, correct, wrong, onPress, disabled }) {
   let bg = '#111116';
@@ -512,9 +676,20 @@ export default function DualNBack() {
             </div>
           </div>
 
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setGameState('tutorial')} style={{
+              flex: 1, padding: '16px', borderRadius: 14,
+              background: '#1a1a22', border: '1px solid #252530',
+              color: '#888', fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}>
+              Watch Tutorial
+            </button>
+
           {/* Start button */}
           <button onClick={startGamePatched} style={{
-            width: '100%', padding: '16px', borderRadius: 14,
+            flex: 2, padding: '16px', borderRadius: 14,
             background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             border: 'none', color: '#fff', fontSize: 16, fontWeight: 600,
             cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
@@ -522,8 +697,12 @@ export default function DualNBack() {
           }}>
             Start {nLevel}-Back Training
           </button>
+          </div>
         </>
       )}
+
+      {/* Tutorial */}
+      {gameState === 'tutorial' && <Tutorial nLevel={nLevel} onDone={() => setGameState('setup')} />}
 
       {/* Playing screen */}
       {gameState === 'playing' && (

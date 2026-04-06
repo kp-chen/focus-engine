@@ -11,7 +11,6 @@ const DURATIONS = [
   { label: '30 min', value: 1800 },
 ];
 
-// Body scan script segments — generic, no personal context
 const BODY_SCAN_SCRIPT = [
   { text: "Find a comfortable position, lying down or reclined. Allow your eyes to close gently.", pause: 6 },
   { text: "Take a deep breath in through your nose. And slowly exhale through your mouth.", pause: 8 },
@@ -36,16 +35,33 @@ const BODY_SCAN_SCRIPT = [
   { text: "Take a full, deep breath in. And open your eyes when you feel ready. Welcome back.", pause: 5 },
 ];
 
-function speak(text, rate = 0.8) {
+function pickVoice() {
+  const voices = speechSynthesis.getVoices();
+  // Prefer natural/calm-sounding voices
+  const preferred = [
+    'Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona',
+    'Google UK English Female', 'Microsoft Zira',
+    'Google US English', 'Nicky', 'Victoria',
+  ];
+  for (const name of preferred) {
+    const v = voices.find(v => v.name.includes(name));
+    if (v) return v;
+  }
+  // Fallback: pick any English female voice
+  const enFemale = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'));
+  if (enFemale) return enFemale;
+  // Fallback: any English voice
+  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+
+function speak(text, voiceVolume = 0.7) {
   return new Promise((resolve) => {
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = rate;
-    u.pitch = 0.9;
-    u.volume = 0.9;
-    // Try to pick a calm-sounding voice
-    const voices = speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Google UK English Female'));
-    if (preferred) u.voice = preferred;
+    u.rate = 0.75;
+    u.pitch = 0.85;
+    u.volume = Math.min(1, voiceVolume);
+    const voice = pickVoice();
+    if (voice) u.voice = voice;
     u.onend = resolve;
     u.onerror = resolve;
     speechSynthesis.speak(u);
@@ -58,10 +74,14 @@ function formatTime(s) {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
-// Breathing ring animation
 function RestCircle({ progress, isActive }) {
-  const breathPhase = isActive ? (Date.now() / 4000) % 1 : 0;
-  const breathScale = isActive ? 0.92 + Math.sin(breathPhase * Math.PI * 2) * 0.08 : 0.85;
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!isActive) return;
+    const iv = setInterval(() => setTick(t => t + 1), 100);
+    return () => clearInterval(iv);
+  }, [isActive]);
+  const breathScale = isActive ? 0.92 + Math.sin(tick * 0.05) * 0.08 : 0.85;
 
   return (
     <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto' }}>
@@ -86,7 +106,6 @@ function RestCircle({ progress, isActive }) {
         transform: `scale(${breathScale})`,
         transition: 'transform 0.5s ease-in-out',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexDirection: 'column',
       }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#ccc' : '#555', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           {isActive ? 'Resting' : 'Ready'}
@@ -96,16 +115,30 @@ function RestCircle({ progress, isActive }) {
   );
 }
 
+function VolumeSlider({ label, value, onChange, color }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(value * 100)}%</span>
+      </div>
+      <input type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
+        style={{ width: '100%', accentColor: color }} />
+    </div>
+  );
+}
+
 export default function NsdrProtocol() {
   const { startSession, endSession } = useCognitive();
-  const { startNsdr, stopEngine, isRunning } = useAudioEngine();
+  const { startNsdr, stopEngine, setVolume: setEngineVolume } = useAudioEngine();
 
   const [duration, setDuration] = useState(600);
   const [isActive, setIsActive] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [currentSegment, setCurrentSegment] = useState(-1);
   const [currentText, setCurrentText] = useState('');
   const [ambientOn, setAmbientOn] = useState(true);
+  const [voiceVol, setVoiceVol] = useState(0.6);
+  const [ambientVol, setAmbientVol] = useState(0.3);
 
   const activeRef = useRef(false);
   const startTimeRef = useRef(0);
@@ -113,67 +146,55 @@ export default function NsdrProtocol() {
 
   const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 0;
 
+  // Live-update ambient volume
+  useEffect(() => {
+    if (isActive && ambientOn) setEngineVolume('nsdr', ambientVol);
+  }, [ambientVol, isActive, ambientOn, setEngineVolume]);
+
   const runSession = useCallback(async () => {
     activeRef.current = true;
     startTimeRef.current = Date.now();
     setIsActive(true);
     setElapsed(0);
-    setCurrentSegment(0);
     startSession('nsdr');
 
-    if (ambientOn) {
-      startNsdr({ volume: 0.35 });
-    }
+    if (ambientOn) startNsdr({ volume: ambientVol });
 
-    // Timer
     timerRef.current = setInterval(() => {
       const el = Math.floor((Date.now() - startTimeRef.current) / 1000);
       setElapsed(el);
-      if (el >= duration) {
-        stopSessionClean();
-      }
+      if (el >= duration) stopSessionClean();
     }, 1000);
 
-    // Wait for voices to load
+    // Wait for voices
     await new Promise(r => {
       if (speechSynthesis.getVoices().length > 0) r();
       else speechSynthesis.onvoiceschanged = r;
-      setTimeout(r, 500); // fallback
+      setTimeout(r, 1000);
     });
 
-    // Calculate how many script segments to use based on duration
-    const segmentsToUse = duration <= 600
+    const segments = duration <= 600
       ? BODY_SCAN_SCRIPT
       : BODY_SCAN_SCRIPT.concat(
-          // Repeat the deep rest segment for longer sessions
           Array.from({ length: Math.floor((duration - 600) / 30) }, () => ({
             text: "Continue to rest deeply. Let each breath carry you further into stillness.",
             pause: 12,
           }))
         );
 
-    // Scale pauses to fit duration
-    const totalScriptTime = segmentsToUse.reduce((s, seg) => s + seg.text.length * 0.06 + seg.pause, 0);
+    const totalScriptTime = segments.reduce((s, seg) => s + seg.text.length * 0.06 + seg.pause, 0);
     const scale = Math.max(1, (duration * 0.8) / totalScriptTime);
 
-    for (let i = 0; i < segmentsToUse.length; i++) {
+    for (let i = 0; i < segments.length; i++) {
       if (!activeRef.current) break;
-      const seg = segmentsToUse[i];
-      setCurrentSegment(i);
-      setCurrentText(seg.text);
-
-      await speak(seg.text, 0.78);
-
+      setCurrentText(segments[i].text);
+      await speak(segments[i].text, voiceVol);
       if (!activeRef.current) break;
-
-      // Pause between segments
-      await new Promise(r => setTimeout(r, seg.pause * 1000 * scale));
+      await new Promise(r => setTimeout(r, segments[i].pause * 1000 * scale));
     }
 
-    if (activeRef.current) {
-      stopSessionClean();
-    }
-  }, [duration, ambientOn, startSession, startNsdr]);
+    if (activeRef.current) stopSessionClean();
+  }, [duration, ambientOn, ambientVol, voiceVol, startSession, startNsdr]);
 
   const stopSessionClean = useCallback(() => {
     activeRef.current = false;
@@ -182,7 +203,6 @@ export default function NsdrProtocol() {
     stopEngine('nsdr');
     setIsActive(false);
     setCurrentText('');
-    setCurrentSegment(-1);
     endSession({ duration: elapsed, ambientOn });
   }, [stopEngine, endSession, elapsed, ambientOn]);
 
@@ -190,7 +210,6 @@ export default function NsdrProtocol() {
     isActive ? stopSessionClean() : runSession();
   }, [isActive, stopSessionClean, runSession]);
 
-  // Cleanup
   useEffect(() => () => {
     activeRef.current = false;
     clearInterval(timerRef.current);
@@ -206,63 +225,63 @@ export default function NsdrProtocol() {
           fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em',
           background: `linear-gradient(135deg, ${COLOR}, #e8e8ec)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        }}>
-          NSDR Protocol
-        </h1>
+        }}>NSDR Protocol</h1>
         <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Non-sleep deep rest · guided body scan
         </p>
       </div>
 
-      {/* Duration selector */}
       {!isActive && (
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-            Duration
-          </label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {DURATIONS.map(d => (
-              <button key={d.value} onClick={() => setDuration(d.value)} style={{
-                flex: 1, padding: '10px 8px', borderRadius: 10,
-                border: `1px solid ${duration === d.value ? COLOR + '50' : '#1e1e26'}`,
-                background: duration === d.value ? COLOR + '10' : '#111116',
-                color: duration === d.value ? '#e8e8ec' : '#555',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-              }}>
-                {d.label}
-              </button>
-            ))}
+        <>
+          {/* Duration */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {DURATIONS.map(d => (
+                <button key={d.value} onClick={() => setDuration(d.value)} style={{
+                  flex: 1, padding: '10px 8px', borderRadius: 10,
+                  border: `1px solid ${duration === d.value ? COLOR + '50' : '#1e1e26'}`,
+                  background: duration === d.value ? COLOR + '10' : '#111116',
+                  color: duration === d.value ? '#e8e8ec' : '#555',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                }}>{d.label}</button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Ambient toggle */}
-      {!isActive && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 16px', borderRadius: 12,
-          background: '#111116', border: '1px solid #1e1e26',
-          marginBottom: 20,
-        }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>Ambient soundscape</div>
-            <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Gentle drone + brown noise backdrop</div>
-          </div>
-          <button onClick={() => setAmbientOn(!ambientOn)} style={{
-            width: 44, height: 24, borderRadius: 12, border: 'none',
-            background: ambientOn ? COLOR : '#252530',
-            cursor: 'pointer', position: 'relative',
-            transition: 'background 0.2s',
+          {/* Ambient toggle */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 16px', borderRadius: 12,
+            background: '#111116', border: '1px solid #1e1e26', marginBottom: 16,
           }}>
-            <div style={{
-              width: 18, height: 18, borderRadius: '50%',
-              background: '#fff', position: 'absolute',
-              top: 3, left: ambientOn ? 23 : 3,
-              transition: 'left 0.2s',
-            }} />
-          </button>
-        </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>Ambient soundscape</div>
+              <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Gentle drone + brown noise backdrop</div>
+            </div>
+            <button onClick={() => setAmbientOn(!ambientOn)} style={{
+              width: 44, height: 24, borderRadius: 12, border: 'none',
+              background: ambientOn ? COLOR : '#252530', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                position: 'absolute', top: 3, left: ambientOn ? 23 : 3, transition: 'left 0.2s',
+              }} />
+            </button>
+          </div>
+
+          {/* Volume sliders */}
+          <div style={{
+            background: '#111116', borderRadius: 12, padding: 16,
+            border: '1px solid #1e1e26', marginBottom: 20,
+            display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            <VolumeSlider label="Voice guide" value={voiceVol} onChange={setVoiceVol} color={COLOR} />
+            {ambientOn && (
+              <VolumeSlider label="Ambient soundscape" value={ambientVol} onChange={setAmbientVol} color={COLOR} />
+            )}
+          </div>
+        </>
       )}
 
       {/* Rest circle */}
@@ -273,16 +292,12 @@ export default function NsdrProtocol() {
       }}>
         <RestCircle progress={progress} isActive={isActive} />
 
-        {/* Current instruction */}
         {isActive && currentText && (
           <div style={{
             textAlign: 'center', marginTop: 20,
             fontSize: 14, color: '#999', lineHeight: 1.6,
-            fontStyle: 'italic', padding: '0 16px',
-            minHeight: 50,
-          }}>
-            "{currentText}"
-          </div>
+            fontStyle: 'italic', padding: '0 16px', minHeight: 50,
+          }}>"{currentText}"</div>
         )}
 
         {/* Timer row */}
@@ -292,23 +307,25 @@ export default function NsdrProtocol() {
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
-            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
-              {formatTime(elapsed)}
-            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{formatTime(elapsed)}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
-            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: isActive ? COLOR : '#888' }}>
-              {formatTime(remaining)}
-            </div>
+            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: isActive ? COLOR : '#888' }}>{formatTime(remaining)}</div>
           </div>
         </div>
 
-        {/* Play/Stop */}
+        {/* Volume controls during session */}
+        {isActive && (
+          <div style={{ padding: '12px 0 0', borderTop: '1px solid #1e1e26', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <VolumeSlider label="Voice" value={voiceVol} onChange={setVoiceVol} color={COLOR} />
+            {ambientOn && <VolumeSlider label="Ambient" value={ambientVol} onChange={setAmbientVol} color={COLOR} />}
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
           <button onClick={toggle} style={{
-            width: isActive ? 140 : 180, padding: '14px 0', borderRadius: 14,
-            border: 'none',
+            width: isActive ? 140 : 180, padding: '14px 0', borderRadius: 14, border: 'none',
             background: isActive ? '#222' : `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",
@@ -327,7 +344,6 @@ export default function NsdrProtocol() {
         )}
       </div>
 
-      {/* Science card */}
       {!isActive && (
         <div style={{
           background: '#111116', borderRadius: 12, padding: 16,
@@ -340,14 +356,14 @@ export default function NsdrProtocol() {
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
             10-min NSDR improved reaction time, cognitive accuracy, and emotional balance vs passive rest (n=65 RCT).{' '}
-            <a href="https://doi.org/10.1111/aphw.12571" target="_blank" rel="noopener noreferrer"
+            <a href="https://pubmed.ncbi.nlm.nih.gov/38953770/" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Boukhris et al. (2024) →
             </a>
           </div>
           <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             Yoga nidra increased striatal dopamine by ~65% in a PET imaging study.{' '}
-            <a href="https://doi.org/10.1089/acm.2002.8.357" target="_blank" rel="noopener noreferrer"
+            <a href="https://pubmed.ncbi.nlm.nih.gov/11958969/" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Kjaer et al. (2002) →
             </a>

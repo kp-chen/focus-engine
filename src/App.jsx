@@ -8,19 +8,7 @@ import FocusEngine from './modules/FocusEngine';
 import BreathworkStudio from './modules/BreathworkStudio';
 import DualNBack from './modules/DualNBack';
 import NsdrProtocol from './modules/NsdrProtocol';
-import PlaceholderModule from './components/PlaceholderModule';
-
-function TimerPage() {
-  return (
-    <PlaceholderModule
-      id="timer"
-      title="Ultradian Timer"
-      icon="◷"
-      description="Smart work/rest timer aligned to 90-minute ultradian rhythms. Tracks focus ratings to learn your optimal block duration."
-      science="Peretz Lavie's ultradian rhythm research: humans cycle through ~90-min periods of higher and lower alertness."
-    />
-  );
-}
+import UltradianTimer from './modules/UltradianTimer';
 
 export default function App() {
   return (
@@ -34,7 +22,7 @@ export default function App() {
               <Route path="/breathe" element={<BreathworkStudio />} />
               <Route path="/nback" element={<DualNBack />} />
               <Route path="/nsdr" element={<NsdrProtocol />} />
-              <Route path="/timer" element={<TimerPage />} />
+              <Route path="/timer" element={<UltradianTimer />} />
             </Routes>
             <NowPlaying />
             <TabBar />
