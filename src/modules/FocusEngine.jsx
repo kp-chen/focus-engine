@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { useAudioEngine } from '../context/AudioEngine';
 import { MODULE_COLORS } from '../theme';
 
 const MODES = [
@@ -14,139 +15,6 @@ const TEXTURES = [
   { id: 'brown', label: 'Brown Noise' },
   { id: 'binaural', label: 'Drone' },
 ];
-
-function createNoiseBuffer(ctx, type) {
-  const len = ctx.sampleRate * 4;
-  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const data = buf.getChannelData(ch);
-    if (type === 'brown') {
-      let last = 0;
-      for (let i = 0; i < len; i++) {
-        const white = Math.random() * 2 - 1;
-        last = (last + 0.02 * white) / 1.02;
-        data[i] = last * 3.5;
-      }
-    } else {
-      let env = 0;
-      for (let i = 0; i < len; i++) {
-        const white = Math.random() * 2 - 1;
-        env += (Math.random() > 0.9997 ? 1 : 0.3 - env) * 0.001;
-        data[i] = white * env;
-      }
-    }
-  }
-  return buf;
-}
-
-function buildGraph(ctx, texture, modeFreq, depth) {
-  const master = ctx.createGain();
-  master.gain.value = 1 - depth * 0.5;
-
-  const amOsc = ctx.createOscillator();
-  amOsc.type = 'sine';
-  amOsc.frequency.value = modeFreq;
-
-  const sources = [];
-
-  if (texture === 'warmpad') {
-    [110, 164.81, 220, 329.63].forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.value = f;
-      osc.detune.value = (Math.random() - 0.5) * 12;
-      const g = ctx.createGain();
-      g.gain.value = 0.08;
-      const lp = ctx.createBiquadFilter();
-      lp.type = 'lowpass';
-      lp.frequency.value = 600 + i * 100;
-      lp.Q.value = 0.7;
-      osc.connect(lp).connect(g).connect(master);
-      osc.start();
-      sources.push(osc);
-    });
-    const sub = ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = 55;
-    const sg = ctx.createGain();
-    sg.gain.value = 0.12;
-    sub.connect(sg).connect(master);
-    sub.start();
-    sources.push(sub);
-  } else if (texture === 'binaural') {
-    [110, 110.5, 220, 220.7, 330, 55].forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      const g = ctx.createGain();
-      g.gain.value = i < 2 ? 0.15 : 0.06;
-      osc.connect(g).connect(master);
-      osc.start();
-      sources.push(osc);
-    });
-  } else {
-    const buf = createNoiseBuffer(ctx, texture);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = texture === 'brown' ? 400 : 8000;
-    lp.Q.value = 0.5;
-    const g = ctx.createGain();
-    g.gain.value = texture === 'brown' ? 0.6 : 0.4;
-    src.connect(lp).connect(g).connect(master);
-    src.start();
-    sources.push(src);
-    if (texture === 'rain') {
-      const buf2 = createNoiseBuffer(ctx, 'rain');
-      const src2 = ctx.createBufferSource();
-      src2.buffer = buf2;
-      src2.loop = true;
-      const hp = ctx.createBiquadFilter();
-      hp.type = 'highpass';
-      hp.frequency.value = 4000;
-      const g2 = ctx.createGain();
-      g2.gain.value = 0.15;
-      src2.connect(hp).connect(g2).connect(master);
-      src2.start();
-      sources.push(src2);
-    }
-  }
-
-  const amDepthGain = ctx.createGain();
-  amDepthGain.gain.value = depth * 0.5;
-  amOsc.connect(amDepthGain).connect(master.gain);
-  amOsc.start();
-  sources.push(amOsc);
-
-  // Reverb
-  const reverbLen = ctx.sampleRate * 2;
-  const reverbBuf = ctx.createBuffer(2, reverbLen, ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = reverbBuf.getChannelData(ch);
-    for (let i = 0; i < reverbLen; i++) {
-      d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.8));
-    }
-  }
-  const convolver = ctx.createConvolver();
-  convolver.buffer = reverbBuf;
-  const wetGain = ctx.createGain();
-  wetGain.gain.value = 0.25;
-  const dryGain = ctx.createGain();
-  dryGain.gain.value = 0.75;
-  const output = ctx.createGain();
-  output.gain.value = 0.7;
-  master.connect(convolver).connect(wetGain).connect(output);
-  master.connect(dryGain).connect(output);
-  output.connect(ctx.destination);
-
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 256;
-  output.connect(analyser);
-
-  return { sources, output, analyser, master };
-}
 
 function Visualizer({ analyser, isPlaying, color }) {
   const canvasRef = useRef(null);
@@ -205,77 +73,64 @@ function formatTime(s) {
 
 export default function FocusEngine() {
   const { startSession, endSession } = useCognitive();
+  const { startFocus, stopEngine, isRunning, getAnalyser, setVolume, getElapsed } = useAudioEngine();
+
   const [mode, setMode] = useState(MODES[0]);
   const [texture, setTexture] = useState(TEXTURES[0].id);
   const [depth, setDepth] = useState(0.22);
-  const [volume, setVolume] = useState(0.7);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolumeState] = useState(0.7);
   const [elapsed, setElapsed] = useState(0);
 
-  const ctxRef = useRef(null);
-  const graphRef = useRef(null);
-  const timerRef = useRef(null);
-  const startTimeRef = useRef(null);
-
+  const playing = isRunning('focus');
+  const analyser = getAnalyser('focus');
   const color = MODULE_COLORS.focus;
-
-  const stop = useCallback(() => {
-    if (graphRef.current) {
-      graphRef.current.sources.forEach(s => { try { s.stop(); } catch (e) {} });
-      graphRef.current.output.disconnect();
-      graphRef.current = null;
-    }
-    if (ctxRef.current) {
-      ctxRef.current.close();
-      ctxRef.current = null;
-    }
-    clearInterval(timerRef.current);
-    if (isPlaying) {
-      endSession({ mode: mode.id, texture, depth, elapsed });
-    }
-    setIsPlaying(false);
-  }, [isPlaying, endSession, mode.id, texture, depth, elapsed]);
+  const timerRef = useRef(null);
 
   const play = useCallback(() => {
-    stop();
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    ctxRef.current = ctx;
-    const graph = buildGraph(ctx, texture, mode.freq, depth);
-    graph.output.gain.value = volume;
-    graphRef.current = graph;
-    setIsPlaying(true);
+    startFocus({ texture, freq: mode.freq, depth, volume });
     startSession('focus');
-    startTimeRef.current = Date.now();
     setElapsed(0);
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      setElapsed(getElapsed('focus'));
     }, 1000);
-  }, [texture, mode, depth, volume, stop, startSession]);
+  }, [texture, mode, depth, volume, startFocus, startSession, getElapsed]);
+
+  const stop = useCallback(() => {
+    stopEngine('focus');
+    clearInterval(timerRef.current);
+    endSession({ mode: mode.id, texture, depth, elapsed });
+  }, [stopEngine, endSession, mode.id, texture, depth, elapsed]);
 
   const toggle = useCallback(() => {
-    isPlaying ? stop() : play();
-  }, [isPlaying, play, stop]);
+    playing ? stop() : play();
+  }, [playing, play, stop]);
 
+  // Sync elapsed if returning to tab with running engine
   useEffect(() => {
-    if (graphRef.current) graphRef.current.output.gain.value = volume;
-  }, [volume]);
+    if (playing) {
+      setElapsed(getElapsed('focus'));
+      timerRef.current = setInterval(() => setElapsed(getElapsed('focus')), 1000);
+      return () => clearInterval(timerRef.current);
+    }
+  }, [playing, getElapsed]);
 
+  // Live volume update
   useEffect(() => {
-    if (isPlaying) play();
+    if (playing) setVolume('focus', volume);
+  }, [volume, playing, setVolume]);
+
+  // Restart audio if params change while playing
+  useEffect(() => {
+    if (playing) {
+      startFocus({ texture, freq: mode.freq, depth, volume });
+    }
   }, [mode, texture, depth]);
 
-  useEffect(() => () => {
-    if (graphRef.current) {
-      graphRef.current.sources.forEach(s => { try { s.stop(); } catch (e) {} });
-      graphRef.current.output.disconnect();
-    }
-    if (ctxRef.current) ctxRef.current.close();
-    clearInterval(timerRef.current);
-  }, []);
+  useEffect(() => () => clearInterval(timerRef.current), []);
 
   return (
     <div style={{ padding: '24px 16px 100px', maxWidth: 600, margin: '0 auto' }}>
-      {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <h1 style={{
           fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em',
@@ -289,7 +144,6 @@ export default function FocusEngine() {
         </p>
       </div>
 
-      {/* Mode selector */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {MODES.map(m => (
           <button key={m.id} onClick={() => setMode(m)} style={{
@@ -306,14 +160,12 @@ export default function FocusEngine() {
         ))}
       </div>
 
-      {/* Visualizer + Play */}
       <div style={{
         background: '#111116', borderRadius: 16, padding: 20, marginBottom: 20,
-        border: '1px solid #1e1e26',
-        boxShadow: `0 0 60px ${color}08`,
+        border: '1px solid #1e1e26', boxShadow: `0 0 60px ${color}08`,
       }}>
         <div style={{ height: 90, marginBottom: 16, borderRadius: 8, overflow: 'hidden' }}>
-          <Visualizer analyser={graphRef.current?.analyser} isPlaying={isPlaying} color={color} />
+          <Visualizer analyser={analyser} isPlaying={playing} color={color} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, color: '#888', minWidth: 60, textAlign: 'center' }}>
@@ -321,18 +173,25 @@ export default function FocusEngine() {
           </span>
           <button onClick={toggle} style={{
             width: 60, height: 60, borderRadius: '50%', border: 'none',
-            background: isPlaying ? '#222' : `linear-gradient(135deg, ${color}, ${color}cc)`,
+            background: playing ? '#222' : `linear-gradient(135deg, ${color}, ${color}cc)`,
             color: '#fff', fontSize: 22, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: isPlaying ? 'none' : `0 4px 24px ${color}40`,
+            boxShadow: playing ? 'none' : `0 4px 24px ${color}40`,
           }}>
-            {isPlaying ? '▪' : '▶'}
+            {playing ? '▪' : '▶'}
           </button>
           <div style={{ minWidth: 60 }} />
         </div>
+        {playing && (
+          <div style={{
+            textAlign: 'center', marginTop: 12, fontSize: 11, color: '#555',
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>
+            Audio persists when you switch tabs
+          </div>
+        )}
       </div>
 
-      {/* Texture selector */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
           Sound texture
@@ -352,7 +211,6 @@ export default function FocusEngine() {
         </div>
       </div>
 
-      {/* Sliders */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -371,19 +229,14 @@ export default function FocusEngine() {
         </div>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Volume
-            </label>
-            <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
-              {Math.round(volume * 100)}%
-            </span>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
+            <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(volume * 100)}%</span>
           </div>
-          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(+e.target.value)}
+          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolumeState(+e.target.value)}
             style={{ width: '100%', accentColor: color }} />
         </div>
       </div>
 
-      {/* Info */}
       <div style={{
         background: '#111116', borderRadius: 12, padding: 16,
         border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
