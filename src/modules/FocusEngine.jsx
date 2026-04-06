@@ -393,7 +393,10 @@ export default function FocusEngine() {
         Sound is modulated at{' '}
         <span style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>{mode.freq} Hz</span>{' '}
         with {Math.round(depth * 100)}% depth, driving neural phase-locking in attentional brain networks.
-        Based on Woods et al. (2024), <em style={{ color: '#666' }}>Commun Biol</em>.
+        Based on Woods et al. (2024), <em style={{ color: '#666' }}>Commun Biol</em>.{' '}
+        <a href="https://doi.org/10.1038/s42003-024-06981-7" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40`, fontSize: 11 }}>
+          Read study →
+        </a>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ const PATTERNS = {
     label: 'Cyclic Sighing',
     desc: 'Double inhale through nose, long exhale through mouth',
     science: 'Balban et al. (2023), Cell Reports Medicine — superior to mindfulness meditation for mood and anxiety reduction over 28 days (n=108 RCT)',
+    url: 'https://doi.org/10.1016/j.xcrm.2022.100895',
     phases: [
       { label: 'Inhale', duration: 2500, action: 'inhale' },
       { label: 'Inhale', duration: 1500, action: 'inhale' },
@@ -20,6 +21,7 @@ const PATTERNS = {
     label: 'Box Breathing',
     desc: 'Equal inhale, hold, exhale, hold — used by Navy SEALs',
     science: 'Ma et al. (2017), Frontiers in Psychology — diaphragmatic breathing reduces cortisol and improves sustained attention. US military adoption based on autonomic downregulation evidence.',
+    url: 'https://doi.org/10.3389/fpsyg.2017.00874',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
       { label: 'Hold', duration: 4000, action: 'hold' },
@@ -32,6 +34,7 @@ const PATTERNS = {
     label: '4-7-8 Relaxing',
     desc: 'Extended exhale activates parasympathetic response',
     science: 'Weil (2015) — based on pranayama tradition. Extended exhalation increases vagal tone and shifts autonomic balance toward rest-and-digest.',
+    url: 'https://doi.org/10.1016/j.mehy.2009.01.045',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
       { label: 'Hold', duration: 7000, action: 'hold' },
@@ -454,7 +457,10 @@ export default function BreathworkStudio() {
           <>The 1:1.75:2 ratio strongly biases the autonomic nervous system toward parasympathetic dominance. Extended exhalation lengthens the cardiac vagal response, reducing heart rate and promoting calm.</>
         )}
         <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11, color: '#555' }}>
-          <span style={{ color: color, fontWeight: 600 }}>Evidence:</span>{' '}{pattern.science}
+          <span style={{ color: color, fontWeight: 600 }}>Evidence:</span>{' '}{pattern.science}{' '}
+          <a href={pattern.url} target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            Read study →
+          </a>
         </div>
       </div>
     </div>

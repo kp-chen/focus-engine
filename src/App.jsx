@@ -4,19 +4,8 @@ import TabBar from './components/TabBar';
 import Dashboard from './modules/Dashboard';
 import FocusEngine from './modules/FocusEngine';
 import BreathworkStudio from './modules/BreathworkStudio';
+import DualNBack from './modules/DualNBack';
 import PlaceholderModule from './components/PlaceholderModule';
-
-function NBackPage() {
-  return (
-    <PlaceholderModule
-      id="nback"
-      title="Dual N-Back"
-      icon="◫"
-      description="Adaptive dual n-back working memory trainer with visual grid + audio letter stimuli. 20 min/day for 20 days."
-      science="Meta-analysis of 33 RCTs: medium transfer to untrained WM tasks, small but significant transfer to fluid intelligence (Gf) and cognitive control. Soveri et al. (2017), Psychonomic Bulletin & Review."
-    />
-  );
-}
 
 function NsdrPage() {
   return (
@@ -25,7 +14,7 @@ function NsdrPage() {
       title="NSDR Protocol"
       icon="◡"
       description="Non-Sleep Deep Rest guided body scan with ambient soundscape. 10-30 minute protocols for cognitive restoration."
-      science="Boukhris et al. (2024): 10-min NSDR improved reaction time, cognitive accuracy, and emotional balance vs passive rest (n=65 RCT). Kjaer et al. (2002): yoga nidra increased striatal dopamine by ~65%."
+      science="Boukhris et al. (2024): 10-min NSDR improved reaction time, cognitive accuracy, and emotional balance vs passive rest (n=65 RCT)."
     />
   );
 }
@@ -37,7 +26,7 @@ function TimerPage() {
       title="Ultradian Timer"
       icon="◷"
       description="Smart work/rest timer aligned to 90-minute ultradian rhythms. Tracks focus ratings to learn your optimal block duration."
-      science="Peretz Lavie's ultradian rhythm research: humans cycle through ~90-min periods of higher and lower alertness. Aligned work blocks may improve sustained performance."
+      science="Peretz Lavie's ultradian rhythm research: humans cycle through ~90-min periods of higher and lower alertness."
     />
   );
 }
@@ -51,7 +40,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/focus" element={<FocusEngine />} />
             <Route path="/breathe" element={<BreathworkStudio />} />
-            <Route path="/nback" element={<NBackPage />} />
+            <Route path="/nback" element={<DualNBack />} />
             <Route path="/nsdr" element={<NsdrPage />} />
             <Route path="/timer" element={<TimerPage />} />
           </Routes>
