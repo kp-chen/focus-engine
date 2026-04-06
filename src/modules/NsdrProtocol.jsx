@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { MODULE_COLORS } from '../theme';
@@ -11,69 +11,23 @@ const DURATIONS = [
   { label: '30 min', value: 1800 },
 ];
 
-const BODY_SCAN_SCRIPT = [
-  { text: "Find a comfortable position, lying down or reclined. Allow your eyes to close gently.", pause: 6 },
-  { text: "Take a deep breath in through your nose. And slowly exhale through your mouth.", pause: 8 },
-  { text: "Again, breathe in deeply. Feel your chest and belly expand. And exhale completely, releasing all tension.", pause: 8 },
-  { text: "Bring your awareness to the top of your head. Notice any sensations there. Simply observe without judgment.", pause: 7 },
-  { text: "Now move your attention to your forehead. Feel it soften and relax. Let go of any tension you find.", pause: 6 },
-  { text: "Allow the relaxation to flow down to your eyes. Feel the muscles around your eyes become heavy and still.", pause: 6 },
-  { text: "Bring your awareness to your jaw. Let it drop slightly, creating space between your teeth. Release all holding.", pause: 6 },
-  { text: "Now notice your neck and throat. Allow them to soften completely.", pause: 5 },
-  { text: "Move your attention to your shoulders. With each exhale, feel them drop further away from your ears.", pause: 7 },
-  { text: "Bring awareness to your right arm. From shoulder to elbow, elbow to wrist, wrist to fingertips. Feel it grow heavy.", pause: 8 },
-  { text: "Now your left arm. Shoulder, elbow, wrist, fingertips. Let it rest completely.", pause: 7 },
-  { text: "Bring your attention to your chest. Feel the gentle rise and fall of your breath. No need to change it.", pause: 7 },
-  { text: "Move awareness to your belly. Let it be soft. Release any holding or bracing.", pause: 6 },
-  { text: "Now notice your lower back. Let the surface beneath you fully support your weight.", pause: 6 },
-  { text: "Bring attention to your hips and pelvis. Allow them to feel heavy and grounded.", pause: 6 },
-  { text: "Move your awareness down your right leg. Thigh, knee, shin, ankle, foot. Let it completely relax.", pause: 7 },
-  { text: "And your left leg. Thigh, knee, shin, ankle, foot. Feel the weight of your body sinking down.", pause: 7 },
-  { text: "Now expand your awareness to your whole body at once. You are fully supported. Fully at rest.", pause: 8 },
-  { text: "Stay in this state of deep rest. Your body is restoring. Your mind is quiet.", pause: 10 },
-  { text: "When you are ready, begin to deepen your breath. Gently wiggle your fingers and toes.", pause: 8 },
-  { text: "Take a full, deep breath in. And open your eyes when you feel ready. Welcome back.", pause: 5 },
-];
-
-function pickVoice() {
-  const voices = speechSynthesis.getVoices();
-  // Prefer natural/calm-sounding voices
-  const preferred = [
-    'Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona',
-    'Google UK English Female', 'Microsoft Zira',
-    'Google US English', 'Nicky', 'Victoria',
-  ];
-  for (const name of preferred) {
-    const v = voices.find(v => v.name.includes(name));
-    if (v) return v;
-  }
-  // Fallback: pick any English female voice
-  const enFemale = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'));
-  if (enFemale) return enFemale;
-  // Fallback: any English voice
-  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
-}
-
-function speak(text, voiceVolume = 0.7, voiceURI = '') {
-  return new Promise((resolve) => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.75;
-    u.pitch = 0.85;
-    u.volume = Math.min(1, voiceVolume);
-    const voices = speechSynthesis.getVoices();
-    const selected = voiceURI ? voices.find(v => v.voiceURI === voiceURI) : null;
-    const voice = selected || pickVoice();
-    if (voice) u.voice = voice;
-    u.onend = resolve;
-    u.onerror = resolve;
-    speechSynthesis.speak(u);
-  });
-}
-
 function formatTime(s) {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+function VolumeSlider({ label, value, onChange, color }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(value * 100)}%</span>
+      </div>
+      <input type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
+        style={{ width: '100%', accentColor: color }} />
+    </div>
+  );
 }
 
 function RestCircle({ progress, isActive }) {
@@ -117,40 +71,24 @@ function RestCircle({ progress, isActive }) {
   );
 }
 
-function VolumeSlider({ label, value, onChange, color }) {
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(value * 100)}%</span>
-      </div>
-      <input type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
-        style={{ width: '100%', accentColor: color }} />
-    </div>
-  );
-}
-
 export default function NsdrProtocol() {
   const { startSession, endSession } = useCognitive();
-  const { startNsdr, stopEngine, setVolume: setEngineVolume } = useAudioEngine();
+  const { startNsdrSession, stopNsdrSession, nsdrNarration, setVolume } = useAudioEngine();
 
   const [duration, setDuration] = useState(600);
-  const [isActive, setIsActive] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [currentText, setCurrentText] = useState('');
   const [ambientOn, setAmbientOn] = useState(true);
   const [voiceVol, setVoiceVol] = useState(0.6);
   const [ambientVol, setAmbientVol] = useState(0.3);
   const [voices, setVoices] = useState([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
 
-  // Load available voices
+  const isActive = nsdrNarration.active;
+
   useEffect(() => {
     const loadVoices = () => {
       const v = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
       setVoices(v);
       if (!selectedVoiceURI && v.length > 0) {
-        // Auto-pick a calm voice
         const preferred = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Google UK English Female', 'Microsoft Zira'];
         const pick = v.find(voice => preferred.some(p => voice.name.includes(p))) || v[0];
         if (pick) setSelectedVoiceURI(pick.voiceURI);
@@ -160,83 +98,38 @@ export default function NsdrProtocol() {
     speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  const activeRef = useRef(false);
-  const startTimeRef = useRef(0);
-  const timerRef = useRef(null);
-
-  const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 0;
-
-  // Live-update ambient volume
   useEffect(() => {
-    if (isActive && ambientOn) setEngineVolume('nsdr', ambientVol);
-  }, [ambientVol, isActive, ambientOn, setEngineVolume]);
+    if (isActive && ambientOn) setVolume('nsdr', ambientVol);
+  }, [ambientVol, isActive, ambientOn, setVolume]);
 
-  const runSession = useCallback(async () => {
-    activeRef.current = true;
-    startTimeRef.current = Date.now();
-    setIsActive(true);
-    setElapsed(0);
+  const handleStart = () => {
     startSession('nsdr');
-
-    if (ambientOn) startNsdr({ volume: ambientVol });
-
-    timerRef.current = setInterval(() => {
-      const el = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      setElapsed(el);
-      if (el >= duration) stopSessionClean();
-    }, 1000);
-
-    // Wait for voices
-    await new Promise(r => {
-      if (speechSynthesis.getVoices().length > 0) r();
-      else speechSynthesis.onvoiceschanged = r;
-      setTimeout(r, 1000);
+    startNsdrSession({
+      duration,
+      ambientOn,
+      ambientVol,
+      voiceVol,
+      voiceURI: selectedVoiceURI,
+      onComplete: () => endSession({ duration, ambientOn }),
     });
+  };
 
-    const segments = duration <= 600
-      ? BODY_SCAN_SCRIPT
-      : BODY_SCAN_SCRIPT.concat(
-          Array.from({ length: Math.floor((duration - 600) / 30) }, () => ({
-            text: "Continue to rest deeply. Let each breath carry you further into stillness.",
-            pause: 12,
-          }))
-        );
+  const handleStop = () => {
+    stopNsdrSession();
+    endSession({ duration: nsdrNarration.elapsed, ambientOn });
+  };
 
-    const totalScriptTime = segments.reduce((s, seg) => s + seg.text.length * 0.06 + seg.pause, 0);
-    const scale = Math.max(1, (duration * 0.8) / totalScriptTime);
+  const remaining = Math.max(0, (nsdrNarration.duration || duration) - nsdrNarration.elapsed);
 
-    for (let i = 0; i < segments.length; i++) {
-      if (!activeRef.current) break;
-      setCurrentText(segments[i].text);
-      await speak(segments[i].text, voiceVol, selectedVoiceURI);
-      if (!activeRef.current) break;
-      await new Promise(r => setTimeout(r, segments[i].pause * 1000 * scale));
-    }
-
-    if (activeRef.current) stopSessionClean();
-  }, [duration, ambientOn, ambientVol, voiceVol, selectedVoiceURI, startSession, startNsdr]);
-
-  const stopSessionClean = useCallback(() => {
-    activeRef.current = false;
-    clearInterval(timerRef.current);
+  // Preview voice
+  const previewVoice = () => {
     speechSynthesis.cancel();
-    stopEngine('nsdr');
-    setIsActive(false);
-    setCurrentText('');
-    endSession({ duration: elapsed, ambientOn });
-  }, [stopEngine, endSession, elapsed, ambientOn]);
-
-  const toggle = useCallback(() => {
-    isActive ? stopSessionClean() : runSession();
-  }, [isActive, stopSessionClean, runSession]);
-
-  useEffect(() => () => {
-    activeRef.current = false;
-    clearInterval(timerRef.current);
-    speechSynthesis.cancel();
-  }, []);
-
-  const remaining = Math.max(0, duration - elapsed);
+    const u = new SpeechSynthesisUtterance('This is how your guided session will sound.');
+    u.rate = 0.75; u.pitch = 0.85; u.volume = voiceVol;
+    const v = speechSynthesis.getVoices().find(v => v.voiceURI === selectedVoiceURI);
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  };
 
   return (
     <div style={{ padding: '24px 16px 100px', maxWidth: 600, margin: '0 auto' }}>
@@ -253,7 +146,6 @@ export default function NsdrProtocol() {
 
       {!isActive && (
         <>
-          {/* Duration */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -269,7 +161,6 @@ export default function NsdrProtocol() {
             </div>
           </div>
 
-          {/* Ambient toggle */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '12px 16px', borderRadius: 12,
@@ -281,7 +172,7 @@ export default function NsdrProtocol() {
             </div>
             <button onClick={() => setAmbientOn(!ambientOn)} style={{
               width: 44, height: 24, borderRadius: 12, border: 'none',
-              background: ambientOn ? COLOR : '#252530', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+              background: ambientOn ? COLOR : '#252530', cursor: 'pointer', position: 'relative',
             }}>
               <div style={{
                 width: 18, height: 18, borderRadius: '50%', background: '#fff',
@@ -290,89 +181,63 @@ export default function NsdrProtocol() {
             </button>
           </div>
 
-          {/* Volume sliders */}
           <div style={{
             background: '#111116', borderRadius: 12, padding: 16,
             border: '1px solid #1e1e26', marginBottom: 16,
             display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             <VolumeSlider label="Voice guide" value={voiceVol} onChange={setVoiceVol} color={COLOR} />
-            {ambientOn && (
-              <VolumeSlider label="Ambient soundscape" value={ambientVol} onChange={setAmbientVol} color={COLOR} />
-            )}
+            {ambientOn && <VolumeSlider label="Ambient soundscape" value={ambientVol} onChange={setAmbientVol} color={COLOR} />}
           </div>
 
-          {/* Voice selector */}
           {voices.length > 0 && (
             <div style={{
               background: '#111116', borderRadius: 12, padding: 16,
               border: '1px solid #1e1e26', marginBottom: 20,
             }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Voice
-              </label>
-              <select
-                value={selectedVoiceURI}
-                onChange={e => setSelectedVoiceURI(e.target.value)}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 8,
-                  background: '#0d0d14', border: '1px solid #252530',
-                  color: '#ccc', fontSize: 13, fontFamily: "'DM Sans', sans-serif",
-                  appearance: 'none', cursor: 'pointer',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
-              >
-                {voices.map(v => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
-                    {v.name}
-                  </option>
-                ))}
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Voice</label>
+              <select value={selectedVoiceURI} onChange={e => setSelectedVoiceURI(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: '#0d0d14', border: '1px solid #252530',
+                color: '#ccc', fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+                appearance: 'none', cursor: 'pointer',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+              }}>
+                {voices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>)}
               </select>
-              <button
-                onClick={() => {
-                  speechSynthesis.cancel();
-                  speak('This is how your guided session will sound.', voiceVol, selectedVoiceURI);
-                }}
-                style={{
-                  marginTop: 8, padding: '6px 14px', borderRadius: 6,
-                  background: 'none', border: `1px solid ${COLOR}30`,
-                  color: COLOR, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                Preview voice
-              </button>
+              <button onClick={previewVoice} style={{
+                marginTop: 8, padding: '6px 14px', borderRadius: 6,
+                background: 'none', border: `1px solid ${COLOR}30`,
+                color: COLOR, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+              }}>Preview voice</button>
             </div>
           )}
         </>
       )}
 
-      {/* Rest circle */}
       <div style={{
         background: '#111116', borderRadius: 16, padding: '24px 20px',
         border: '1px solid #1e1e26', marginBottom: 20,
         boxShadow: isActive ? `0 0 80px ${COLOR}08` : 'none',
       }}>
-        <RestCircle progress={progress} isActive={isActive} />
+        <RestCircle progress={nsdrNarration.progress} isActive={isActive} />
 
-        {isActive && currentText && (
+        {isActive && nsdrNarration.currentText && (
           <div style={{
-            textAlign: 'center', marginTop: 20,
-            fontSize: 14, color: '#999', lineHeight: 1.6,
-            fontStyle: 'italic', padding: '0 16px', minHeight: 50,
-          }}>"{currentText}"</div>
+            textAlign: 'center', marginTop: 20, fontSize: 14, color: '#999',
+            lineHeight: 1.6, fontStyle: 'italic', padding: '0 16px', minHeight: 50,
+          }}>"{nsdrNarration.currentText}"</div>
         )}
 
-        {/* Timer row */}
         <div style={{
           display: 'flex', justifyContent: 'space-around', alignItems: 'center',
           marginTop: 20, padding: '12px 0', borderTop: '1px solid #1e1e26',
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
-            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{formatTime(elapsed)}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{formatTime(nsdrNarration.elapsed)}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
@@ -380,7 +245,6 @@ export default function NsdrProtocol() {
           </div>
         </div>
 
-        {/* Volume controls during session */}
         {isActive && (
           <div style={{ padding: '12px 0 0', borderTop: '1px solid #1e1e26', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <VolumeSlider label="Voice" value={voiceVol} onChange={setVoiceVol} color={COLOR} />
@@ -389,7 +253,7 @@ export default function NsdrProtocol() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button onClick={toggle} style={{
+          <button onClick={isActive ? handleStop : handleStart} style={{
             width: isActive ? 140 : 180, padding: '14px 0', borderRadius: 14, border: 'none',
             background: isActive ? '#222' : `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
@@ -401,10 +265,9 @@ export default function NsdrProtocol() {
             {isActive ? 'End Session' : 'Begin NSDR'}
           </button>
         </div>
-
         {isActive && (
           <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: '#444', fontFamily: "'JetBrains Mono', monospace" }}>
-            Audio persists when you switch tabs
+            Voice + audio persist when you switch tabs
           </div>
         )}
       </div>
@@ -422,16 +285,12 @@ export default function NsdrProtocol() {
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
             10-min NSDR improved reaction time, cognitive accuracy, and emotional balance vs passive rest (n=65 RCT).{' '}
             <a href="https://pubmed.ncbi.nlm.nih.gov/38953770/" target="_blank" rel="noopener noreferrer"
-              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
-              Boukhris et al. (2024) →
-            </a>
+              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>Boukhris et al. (2024) →</a>
           </div>
           <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             Yoga nidra increased striatal dopamine by ~65% in a PET imaging study.{' '}
             <a href="https://pubmed.ncbi.nlm.nih.gov/11958969/" target="_blank" rel="noopener noreferrer"
-              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
-              Kjaer et al. (2002) →
-            </a>
+              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>Kjaer et al. (2002) →</a>
           </div>
         </div>
       )}
