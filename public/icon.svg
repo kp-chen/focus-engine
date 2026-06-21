@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Vector source for the PWA icons. The PNGs under public/ are rasterised
+       from this by scripts/gen-icons.mjs (npm run icons). -->
+  <rect width="512" height="512" fill="#0a0a0f"/>
+  <circle cx="256" cy="256" r="185" fill="none" stroke="#e8e8ec" stroke-width="28"/>
+  <circle cx="256" cy="256" r="78" fill="#f06040"/>
+</svg>

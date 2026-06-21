@@ -52,4 +52,9 @@ export default [
     files: ['**/*.test.{js,jsx}', '**/vitest.setup.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
+  {
+    // Build tooling and Node scripts run under Node, not the browser.
+    files: ['scripts/**/*.{js,mjs}', '*.config.{js,mjs}'],
+    languageOptions: { globals: { ...globals.node } },
+  },
 ];
