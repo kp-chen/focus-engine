@@ -88,14 +88,20 @@ export default function NsdrProtocol() {
     const loadVoices = () => {
       const v = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
       setVoices(v);
-      if (!selectedVoiceURI && v.length > 0) {
+      // Functional update so we don't capture a stale selectedVoiceURI, and only
+      // pick a default the first time (when none is chosen yet).
+      setSelectedVoiceURI(prev => {
+        if (prev || v.length === 0) return prev;
         const preferred = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Google UK English Female', 'Microsoft Zira'];
         const pick = v.find(voice => preferred.some(p => voice.name.includes(p))) || v[0];
-        if (pick) setSelectedVoiceURI(pick.voiceURI);
-      }
+        return pick ? pick.voiceURI : prev;
+      });
     };
     loadVoices();
-    speechSynthesis.onvoiceschanged = loadVoices;
+    // addEventListener (not onvoiceschanged=) so we don't clobber other handlers,
+    // and the listener is removed on unmount instead of leaking on the global.
+    speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => speechSynthesis.removeEventListener('voiceschanged', loadVoices);
   }, []);
 
   useEffect(() => {

@@ -3,19 +3,53 @@ import { createContext, useContext, useReducer, useEffect, useCallback } from 'r
 const CognitiveContext = createContext(null);
 
 // Storage helpers
-const STORAGE_KEY = 'cognitive_toolkit';
+export const STORAGE_KEY = 'cognitive_toolkit';
+const SCHEMA_VERSION = 3;
 
-function loadState() {
+export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const saved = JSON.parse(raw);
-    // Merge streaks with defaults so new modules don't crash
-    if (saved && saved.streaks) {
-      saved.streaks = { ...defaultStreaks, ...saved.streaks };
+    if (!saved || typeof saved !== 'object') return null;
+    // Deep-merge AND per-field normalize the saved payload over the current
+    // defaults, so state written by an older schema — or hand-edited / partially
+    // corrupt — can never crash a newer build. This retires the "black screen"
+    // class of bug entirely: not only must every module key exist, every value
+    // the Dashboard reads (streak numbers, session shape, activeSession) must be
+    // well-formed. Unknown junk keys are dropped.
+    const streaks = {};
+    for (const key of Object.keys(defaultStreaks)) {
+      const sv = saved.streaks?.[key];
+      streaks[key] = sv && typeof sv === 'object'
+        ? {
+            current: Number(sv.current) || 0,
+            best: Number(sv.best) || 0,
+            lastDate: typeof sv.lastDate === 'string' ? sv.lastDate : null,
+          }
+        : { ...defaultStreaks[key] };
     }
-    return saved;
-  } catch { return null; }
+    const sessions = Array.isArray(saved.sessions)
+      ? saved.sessions.filter(s => s && typeof s === 'object' && typeof s.startedAt === 'number')
+      : [];
+    const as = saved.activeSession;
+    const activeSession = as && typeof as === 'object'
+      && typeof as.startedAt === 'number' && typeof as.module === 'string'
+      ? as
+      : null;
+    return {
+      ...defaultState,
+      ...saved,
+      sessions,
+      streaks,
+      settings: { ...defaultState.settings, ...(saved.settings || {}) },
+      activeSession,
+      _v: SCHEMA_VERSION,
+    };
+  } catch (e) {
+    console.warn('Failed to load saved state, starting fresh:', e);
+    return null;
+  }
 }
 
 function saveState(state) {
@@ -24,7 +58,7 @@ function saveState(state) {
   } catch (e) { console.warn('Storage save failed:', e); }
 }
 
-const defaultStreaks = {
+export const defaultStreaks = {
   focus: { current: 0, best: 0, lastDate: null },
   breathe: { current: 0, best: 0, lastDate: null },
   nback: { current: 0, best: 0, lastDate: null },
@@ -34,7 +68,7 @@ const defaultStreaks = {
 };
 
 // Initial state
-const defaultState = {
+export const defaultState = {
   sessions: [],
   streaks: { ...defaultStreaks },
   settings: {
@@ -45,7 +79,7 @@ const defaultState = {
 };
 
 // Reducer
-function reducer(state, action) {
+export function reducer(state, action) {
   switch (action.type) {
     case 'START_SESSION': {
       return {

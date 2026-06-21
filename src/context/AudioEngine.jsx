@@ -1,4 +1,5 @@
 import { createContext, useContext, useRef, useCallback, useState, useEffect } from 'react';
+import { getAudioContext } from '../lib/audioContext';
 
 const AudioEngineContext = createContext(null);
 
@@ -194,7 +195,7 @@ export function AudioEngineProvider({ children }) {
 
   const startFocus = useCallback((config) => {
     stopEngine('focus');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
     const graph = buildFocusGraph(ctx, config.texture, config.freq, config.depth);
     graph.output.gain.value = config.volume ?? 0.7;
     enginesRef.current.focus = { ctx, graph, startedAt: Date.now(), config };
@@ -204,7 +205,7 @@ export function AudioEngineProvider({ children }) {
 
   const startNsdr = useCallback((config) => {
     stopEngine('nsdr');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
     const graph = buildNsdrGraph(ctx, config.volume ?? 0.4);
     enginesRef.current.nsdr = { ctx, graph, startedAt: Date.now(), config };
     syncUI();
@@ -239,8 +240,11 @@ export function AudioEngineProvider({ children }) {
 
     // Wait for voices
     await new Promise(r => {
-      if (speechSynthesis.getVoices().length > 0) r();
-      else speechSynthesis.onvoiceschanged = r;
+      if (speechSynthesis.getVoices().length > 0) return r();
+      // addEventListener (not onvoiceschanged=) so we don't clobber any existing
+      // handler, and { once } cleans itself up.
+      const onVoices = () => r();
+      speechSynthesis.addEventListener('voiceschanged', onVoices, { once: true });
       setTimeout(r, 1000);
     });
 
@@ -284,8 +288,9 @@ export function AudioEngineProvider({ children }) {
     const engine = enginesRef.current[moduleId];
     if (!engine) return;
     engine.graph.sources.forEach(s => { try { s.stop(); } catch {} });
-    engine.graph.output.disconnect();
-    engine.ctx.close();
+    try { engine.graph.output.disconnect(); } catch {}
+    // The shared context is intentionally NOT closed — repeatedly closing and
+    // reopening AudioContexts hits the browser's hardware-context cap.
     delete enginesRef.current[moduleId];
     syncUI();
   }, [syncUI]);
@@ -323,7 +328,7 @@ export function AudioEngineProvider({ children }) {
     clearInterval(nsdrTimerRef.current);
     Object.values(enginesRef.current).forEach(e => {
       e.graph.sources.forEach(s => { try { s.stop(); } catch {} });
-      e.graph.output.disconnect(); e.ctx.close();
+      try { e.graph.output.disconnect(); } catch {}
     });
   }, []);
 

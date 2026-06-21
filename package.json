@@ -6,15 +6,30 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.26.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.4.2"
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.8.4",
+    "vite": "^5.4.2",
+    "vitest": "^4.1.9"
   }
 }

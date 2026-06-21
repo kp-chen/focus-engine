@@ -45,7 +45,7 @@ function generateSequence(length, n) {
 }
 
 // 3x3 Grid component
-function Grid({ activeCell, showFeedback, feedbackType }) {
+function Grid({ activeCell }) {
   return (
     <div style={{
       display: 'grid',
@@ -119,7 +119,7 @@ const TUTORIAL_STEPS = [
   },
 ];
 
-function Tutorial({ nLevel, onDone }) {
+function Tutorial({ onDone }) {
   const [step, setStep] = useState(0);
   const [seqIndex, setSeqIndex] = useState(0);
   const s = TUTORIAL_STEPS[step];
@@ -136,7 +136,7 @@ function Tutorial({ nLevel, onDone }) {
       });
     }, 1500);
     return () => clearInterval(iv);
-  }, [step, hasSeq]);
+  }, [step, hasSeq, s.sequence]);
 
   const activePos = hasSeq ? s.sequence[seqIndex].pos : s.grid;
   const activeLetter = hasSeq ? s.sequence[seqIndex].letter : s.letter;
@@ -243,10 +243,14 @@ function ResponseButton({ label, sublabel, active, correct, wrong, onPress, disa
   else if (active && wrong) { bg = '#3a1a1a'; border = '#6a2a2a'; }
   else if (active) { bg = COLOR + '15'; border = COLOR + '40'; }
 
+  const state = !active ? '' : correct ? ' — correct' : wrong ? ' — wrong' : ' — selected';
+
   return (
     <button
       onClick={onPress}
       disabled={disabled}
+      aria-pressed={active}
+      aria-label={`${label} match${state}`}
       style={{
         flex: 1,
         padding: '14px 8px',
@@ -338,7 +342,7 @@ export default function DualNBack() {
 
   const [nLevel, setNLevel] = useState(2);
   const [trialCount, setTrialCount] = useState(20);
-  const [gameState, setGameState] = useState('setup'); // setup | playing | feedback | results
+  const [gameState, setGameState] = useState('setup'); // setup | tutorial | playing | results
   const [currentTrial, setCurrentTrial] = useState(0);
   const [activeCell, setActiveCell] = useState(-1);
   const [activeLetter, setActiveLetter] = useState('');
@@ -354,123 +358,55 @@ export default function DualNBack() {
     posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
     audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
   });
-  const timeoutRef = useRef(null);
   const trialRef = useRef(0);
 
   const STIMULUS_TIME = 500;  // ms stimulus shown
   const RESPONSE_TIME = 2500; // ms total per trial
 
+  // The trial loop reads the latest values from refs, so the timeouts it
+  // schedules never capture stale state. (The previous version only applied the
+  // ref-based scorer to trial 0; from trial 2 onward it fell back into a loop
+  // whose scheduled scorer had captured posPressed/audPressed as false, so the
+  // player's responses were silently never counted.)
+  const posPressedRef = useRef(false);
+  const audPressedRef = useRef(false);
+  const nLevelRef = useRef(nLevel);
+  useEffect(() => { posPressedRef.current = posPressed; }, [posPressed]);
+  useEffect(() => { audPressedRef.current = audPressed; }, [audPressed]);
+  useEffect(() => { nLevelRef.current = nLevel; }, [nLevel]);
+
+  // Two pending timers per trial: the stimulus-hide and the score/advance. Both
+  // are tracked so clearTimers() can cancel them on End Session / unmount and
+  // nothing fires after the game has stopped.
+  const stimulusTimerRef = useRef(null);
+  const advanceTimerRef = useRef(null);
+
   const clearTimers = useCallback(() => {
-    clearTimeout(timeoutRef.current);
+    clearTimeout(stimulusTimerRef.current);
+    clearTimeout(advanceTimerRef.current);
+    // Silence any queued/in-progress spoken letter so nothing is audible after
+    // the game stops (End Session / unmount / restart).
+    try { speechSynthesis.cancel(); } catch {}
   }, []);
 
-  const startGame = useCallback(() => {
-    const seq = generateSequence(trialCount + nLevel, nLevel);
-    seqRef.current = seq;
-    statsRef.current = {
-      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
-      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
-    };
-    trialRef.current = 0;
-    setCurrentTrial(0);
-    setGameState('playing');
-    setStats(null);
-    startSession('nback');
-    // Start first trial after short delay
-    setTimeout(() => showTrial(0), 600);
-  }, [trialCount, nLevel, startSession]);
-
-  const showTrial = useCallback((index) => {
-    const seq = seqRef.current;
-    if (!seq || index >= seq.positions.length) {
-      finishGame();
-      return;
-    }
-
-    trialRef.current = index;
-    setCurrentTrial(index);
-    setPosPressed(false);
-    setAudPressed(false);
-    setPosFeedback(null);
-    setAudFeedback(null);
-
-    // Show stimulus
-    setActiveCell(seq.positions[index]);
-    setActiveLetter(seq.letters[index]);
-    setShowingStimulus(true);
-    speakLetter(seq.letters[index]);
-
-    // Hide stimulus after STIMULUS_TIME
-    timeoutRef.current = setTimeout(() => {
-      setActiveCell(-1);
-      setShowingStimulus(false);
-    }, STIMULUS_TIME);
-
-    // End trial after RESPONSE_TIME → score and advance
-    setTimeout(() => {
-      scoreTrial(index);
-    }, RESPONSE_TIME);
-  }, [nLevel]);
+  // showTrial ⇄ scoreTrial call each other; the indirection through refs avoids
+  // a useCallback dependency cycle while keeping both stable.
+  const showTrialRef = useRef(null);
+  const finishGameRef = useRef(null);
 
   const scoreTrial = useCallback((index) => {
     const seq = seqRef.current;
     if (!seq) return;
 
     const s = statsRef.current;
-    const isPosMatch = seq.posMatches.has(index);
-    const isAudMatch = seq.audMatches.has(index);
-
-    // Only score trials where n-back comparison is possible
-    if (index >= nLevel) {
-      // Position
-      if (isPosMatch && posPressed) s.posHits++;
-      else if (isPosMatch && !posPressed) s.posMisses++;
-      else if (!isPosMatch && posPressed) s.posFalseAlarms++;
-      else s.posCorrectRejects++;
-
-      // Audio
-      if (isAudMatch && audPressed) s.audHits++;
-      else if (isAudMatch && !audPressed) s.audMisses++;
-      else if (!isAudMatch && audPressed) s.audFalseAlarms++;
-      else s.audCorrectRejects++;
-    }
-
-    // Brief feedback
-    if (index >= nLevel) {
-      const pc = (isPosMatch && posPressed) || (!isPosMatch && !posPressed) ? 'correct' : 'wrong';
-      const ac = (isAudMatch && audPressed) || (!isAudMatch && !audPressed) ? 'correct' : 'wrong';
-      setPosFeedback(pc);
-      setAudFeedback(ac);
-    }
-
-    // Advance or finish
-    const nextIndex = index + 1;
-    if (nextIndex >= seq.positions.length) {
-      setTimeout(() => finishGame(), 400);
-    } else {
-      setTimeout(() => showTrial(nextIndex), 400);
-    }
-  }, [nLevel, posPressed, audPressed]);
-
-  // We need posPressed/audPressed at score time, so use refs
-  const posPressedRef = useRef(false);
-  const audPressedRef = useRef(false);
-
-  useEffect(() => { posPressedRef.current = posPressed; }, [posPressed]);
-  useEffect(() => { audPressedRef.current = audPressed; }, [audPressed]);
-
-  // Override scoreTrial to use refs
-  const scoreTrialReal = useCallback((index) => {
-    const seq = seqRef.current;
-    if (!seq) return;
-
-    const s = statsRef.current;
+    const n = nLevelRef.current;
     const isPosMatch = seq.posMatches.has(index);
     const isAudMatch = seq.audMatches.has(index);
     const pp = posPressedRef.current;
     const ap = audPressedRef.current;
 
-    if (index >= nLevel) {
+    // Only score trials where an n-back comparison is possible
+    if (index >= n) {
       if (isPosMatch && pp) s.posHits++;
       else if (isPosMatch && !pp) s.posMisses++;
       else if (!isPosMatch && pp) s.posFalseAlarms++;
@@ -481,25 +417,22 @@ export default function DualNBack() {
       else if (!isAudMatch && ap) s.audFalseAlarms++;
       else s.audCorrectRejects++;
 
-      const pc = (isPosMatch && pp) || (!isPosMatch && !pp) ? 'correct' : 'wrong';
-      const ac = (isAudMatch && ap) || (!isAudMatch && !ap) ? 'correct' : 'wrong';
-      setPosFeedback(pc);
-      setAudFeedback(ac);
+      setPosFeedback((isPosMatch && pp) || (!isPosMatch && !pp) ? 'correct' : 'wrong');
+      setAudFeedback((isAudMatch && ap) || (!isAudMatch && !ap) ? 'correct' : 'wrong');
     }
 
     const nextIndex = index + 1;
     if (nextIndex >= seq.positions.length) {
-      setTimeout(() => finishGame(), 400);
+      advanceTimerRef.current = setTimeout(() => finishGameRef.current?.(), 400);
     } else {
-      setTimeout(() => showTrial(nextIndex), 400);
+      advanceTimerRef.current = setTimeout(() => showTrialRef.current?.(nextIndex), 400);
     }
-  }, [nLevel]);
+  }, []);
 
-  // Patch showTrial to use scoreTrialReal
-  const showTrialPatched = useCallback((index) => {
+  const showTrial = useCallback((index) => {
     const seq = seqRef.current;
     if (!seq || index >= seq.positions.length) {
-      finishGame();
+      finishGameRef.current?.();
       return;
     }
 
@@ -511,20 +444,24 @@ export default function DualNBack() {
     audPressedRef.current = false;
     setPosFeedback(null);
     setAudFeedback(null);
+
+    // Show stimulus
     setActiveCell(seq.positions[index]);
     setActiveLetter(seq.letters[index]);
     setShowingStimulus(true);
     speakLetter(seq.letters[index]);
 
-    timeoutRef.current = setTimeout(() => {
+    // Hide stimulus after STIMULUS_TIME
+    stimulusTimerRef.current = setTimeout(() => {
       setActiveCell(-1);
       setShowingStimulus(false);
     }, STIMULUS_TIME);
 
-    setTimeout(() => {
-      scoreTrialReal(index);
-    }, RESPONSE_TIME);
-  }, [scoreTrialReal]);
+    // End trial after RESPONSE_TIME → score and advance
+    advanceTimerRef.current = setTimeout(() => scoreTrial(index), RESPONSE_TIME);
+  }, [scoreTrial]);
+
+  useEffect(() => { showTrialRef.current = showTrial; }, [showTrial]);
 
   const finishGame = useCallback(() => {
     clearTimers();
@@ -548,10 +485,32 @@ export default function DualNBack() {
     });
   }, [clearTimers, endSession, nLevel, trialCount]);
 
+  useEffect(() => { finishGameRef.current = finishGame; }, [finishGame]);
+
+  const startGame = useCallback(() => {
+    clearTimers();
+    const seq = generateSequence(trialCount + nLevel, nLevel);
+    seqRef.current = seq;
+    statsRef.current = {
+      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
+      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
+    };
+    trialRef.current = 0;
+    setCurrentTrial(0);
+    setGameState('playing');
+    setStats(null);
+    startSession('nback');
+    // Start first trial after a short delay
+    advanceTimerRef.current = setTimeout(() => showTrial(0), 600);
+  }, [trialCount, nLevel, startSession, showTrial, clearTimers]);
+
   // Keyboard shortcuts
   useEffect(() => {
     if (gameState !== 'playing') return;
     const handler = (e) => {
+      // Match the on-screen buttons, which are disabled during the memorise
+      // lead-in (currentTrial < nLevel).
+      if (trialRef.current < nLevelRef.current) return;
       if (e.key === 'a' || e.key === 'A') {
         setPosPressed(true);
         posPressedRef.current = true;
@@ -565,24 +524,8 @@ export default function DualNBack() {
     return () => window.removeEventListener('keydown', handler);
   }, [gameState]);
 
-  // Cleanup
+  // Cleanup any pending timers on unmount
   useEffect(() => () => clearTimers(), [clearTimers]);
-
-  // Start game with patched function
-  const startGamePatched = useCallback(() => {
-    const seq = generateSequence(trialCount + nLevel, nLevel);
-    seqRef.current = seq;
-    statsRef.current = {
-      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
-      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
-    };
-    trialRef.current = 0;
-    setCurrentTrial(0);
-    setGameState('playing');
-    setStats(null);
-    startSession('nback');
-    setTimeout(() => showTrialPatched(0), 600);
-  }, [trialCount, nLevel, startSession, showTrialPatched]);
 
   const totalTrials = seqRef.current ? seqRef.current.positions.length : trialCount + nLevel;
   const progress = gameState === 'playing' ? currentTrial / totalTrials : 0;
@@ -688,7 +631,7 @@ export default function DualNBack() {
             </button>
 
           {/* Start button */}
-          <button onClick={startGamePatched} style={{
+          <button onClick={startGame} style={{
             flex: 2, padding: '16px', borderRadius: 14,
             background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             border: 'none', color: '#fff', fontSize: 16, fontWeight: 600,
@@ -702,7 +645,7 @@ export default function DualNBack() {
       )}
 
       {/* Tutorial */}
-      {gameState === 'tutorial' && <Tutorial nLevel={nLevel} onDone={() => setGameState('setup')} />}
+      {gameState === 'tutorial' && <Tutorial onDone={() => setGameState('setup')} />}
 
       {/* Playing screen */}
       {gameState === 'playing' && (
@@ -808,7 +751,7 @@ export default function DualNBack() {
           <Results
             stats={stats}
             nLevel={nLevel}
-            onRestart={startGamePatched}
+            onRestart={startGame}
             onClose={() => setGameState('setup')}
           />
         </div>

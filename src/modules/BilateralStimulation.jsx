@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { getAudioContext } from '../lib/audioContext';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = '#d4537e'; // pink from our palette — calming but distinct
@@ -38,9 +39,10 @@ function haptic(ms = 15) {
   try { navigator?.vibrate?.(ms); } catch {}
 }
 
-// Audio engine for bilateral tones
+// Audio engine for bilateral tones. Uses the shared AudioContext; teardown stops
+// the oscillator and disconnects the envelope rather than closing the context.
 function createBilateralEngine(freq, type) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = getAudioContext();
   const osc = ctx.createOscillator();
   osc.type = type;
   osc.frequency.value = freq;
@@ -163,10 +165,10 @@ export default function BilateralStimulation() {
     cancelAnimationFrame(animRef.current);
 
     if (engineRef.current) {
-      const { ctx, osc, envelope } = engineRef.current;
+      const { osc, envelope } = engineRef.current;
       envelope.gain.value = 0;
       try { osc.stop(); } catch {}
-      try { ctx.close(); } catch {}
+      try { envelope.disconnect(); } catch {} // sever from the shared destination
       engineRef.current = null;
     }
 
@@ -262,14 +264,14 @@ export default function BilateralStimulation() {
     }
   }, [volume]);
 
-  // Cleanup
+  // Cleanup — stop the note and disconnect, but leave the shared context open.
   useEffect(() => () => {
     activeRef.current = false;
     clearInterval(timerRef.current);
     cancelAnimationFrame(animRef.current);
     if (engineRef.current) {
       try { engineRef.current.osc.stop(); } catch {}
-      try { engineRef.current.ctx.close(); } catch {}
+      try { engineRef.current.envelope.disconnect(); } catch {}
     }
   }, []);
 

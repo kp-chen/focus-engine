@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
+import { getAudioContext } from '../lib/audioContext';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.timer;
@@ -23,7 +24,7 @@ function haptic(ms = 40) {
 
 function chime() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -33,7 +34,8 @@ function chime() {
     osc.connect(gain).connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + 1.5);
-    setTimeout(() => ctx.close(), 2000);
+    // The osc/gain nodes are GC'd once the note finishes; the shared context
+    // stays open (no per-chime context churn).
   } catch {}
 }
 
@@ -160,6 +162,9 @@ export default function UltradianTimer() {
   }, [preset, endSession]);
 
   const startWork = useCallback(() => {
+    // Warm the shared AudioContext inside this click gesture so the end-of-phase
+    // chime is allowed to play even though it fires later from a timer callback.
+    getAudioContext();
     phaseRef.current = 'work';
     setPhase('work');
     setRemaining(preset.work * 60);
