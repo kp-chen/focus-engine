@@ -3,6 +3,31 @@ import { getAudioContext } from '../lib/audioContext';
 
 const AudioEngineContext = createContext(null);
 
+/**
+ * @typedef {Object} FocusConfig
+ * @property {'warmpad'|'rain'|'brown'|'binaural'|string} texture
+ * @property {number} freq   AM modulation frequency in Hz
+ * @property {number} depth  AM depth, 0–0.5
+ * @property {number} [volume]
+ */
+
+/**
+ * @typedef {Object} AudioGraph
+ * @property {AudioScheduledSourceNode[]} sources
+ * @property {GainNode} output
+ * @property {AnalyserNode} [analyser]
+ * @property {GainNode} [master]
+ */
+
+/**
+ * One running audio engine, keyed by module id ('focus' | 'nsdr').
+ * @typedef {Object} EngineEntry
+ * @property {AudioContext} ctx
+ * @property {AudioGraph} graph
+ * @property {number} startedAt
+ * @property {Object} config
+ */
+
 function createNoiseBuffer(ctx, type) {
   const len = ctx.sampleRate * 4;
   const buf = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -171,7 +196,7 @@ function speakText(text, voiceVol, voiceURI) {
 }
 
 export function AudioEngineProvider({ children }) {
-  const enginesRef = useRef({});
+  const enginesRef = useRef(/** @type {Record<string, EngineEntry>} */ ({}));
   const [activeEngines, setActiveEngines] = useState({});
 
   // NSDR narration state — lives here so it survives navigation

@@ -2,10 +2,46 @@ import { createContext, useContext, useReducer, useEffect, useCallback } from 'r
 
 const CognitiveContext = createContext(null);
 
+/**
+ * Per-module daily-use streak.
+ * @typedef {Object} Streak
+ * @property {number} current   Consecutive-day count.
+ * @property {number} best      Best streak ever reached.
+ * @property {string|null} lastDate  Date string of the last logged day.
+ */
+
+/**
+ * A completed module session.
+ * @typedef {Object} Session
+ * @property {string} id
+ * @property {string} module
+ * @property {number} startedAt  Epoch ms.
+ * @property {number} endedAt    Epoch ms.
+ * @property {number} duration   ms.
+ * @property {Object} data       Module-specific payload.
+ */
+
+/**
+ * @typedef {Object} Settings
+ * @property {number} volume
+ * @property {boolean} haptics
+ */
+
+/**
+ * The persisted application state (localStorage under STORAGE_KEY).
+ * @typedef {Object} State
+ * @property {Session[]} sessions
+ * @property {Record<string, Streak>} streaks
+ * @property {Settings} settings
+ * @property {{module: string, startedAt: number}|null} activeSession
+ * @property {number} [_v]  Schema version stamped on load.
+ */
+
 // Storage helpers
 export const STORAGE_KEY = 'cognitive_toolkit';
 const SCHEMA_VERSION = 3;
 
+/** @returns {State|null} */
 export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -52,6 +88,7 @@ export function loadState() {
   }
 }
 
+/** @param {State} state */
 function saveState(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -68,6 +105,7 @@ export const defaultStreaks = {
 };
 
 // Initial state
+/** @type {State} */
 export const defaultState = {
   sessions: [],
   streaks: { ...defaultStreaks },
@@ -79,6 +117,11 @@ export const defaultState = {
 };
 
 // Reducer
+/**
+ * @param {State} state
+ * @param {{type: string, module?: string, data?: Object, settings?: Partial<Settings>}} action
+ * @returns {State}
+ */
 export function reducer(state, action) {
   switch (action.type) {
     case 'START_SESSION': {
