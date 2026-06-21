@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.nsdr;
@@ -30,14 +31,17 @@ function VolumeSlider({ label, value, onChange, color }) {
   );
 }
 
-function RestCircle({ progress, isActive }) {
+function RestCircle({ progress, isActive, reduced }) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (!isActive) return;
+    // Skip the pulse driver entirely under reduced motion (no wasted interval).
+    if (!isActive || reduced) return;
     const iv = setInterval(() => setTick(t => t + 1), 100);
     return () => clearInterval(iv);
-  }, [isActive]);
-  const breathScale = isActive ? 0.92 + Math.sin(tick * 0.05) * 0.08 : 0.85;
+  }, [isActive, reduced]);
+  // Reduced motion: hold a steady size instead of the breathing pulse. The
+  // progress ring + narration text still convey session state.
+  const breathScale = reduced ? 0.9 : (isActive ? 0.92 + Math.sin(tick * 0.05) * 0.08 : 0.85);
 
   return (
     <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto' }}>
@@ -74,6 +78,7 @@ function RestCircle({ progress, isActive }) {
 export default function NsdrProtocol() {
   const { startSession, endSession } = useCognitive();
   const { startNsdrSession, stopNsdrSession, nsdrNarration, setVolume } = useAudioEngine();
+  const reduced = useReducedMotion();
 
   const [duration, setDuration] = useState(600);
   const [ambientOn, setAmbientOn] = useState(true);
@@ -176,7 +181,8 @@ export default function NsdrProtocol() {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>Ambient soundscape</div>
               <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Gentle drone + brown noise backdrop</div>
             </div>
-            <button onClick={() => setAmbientOn(!ambientOn)} style={{
+            <button onClick={() => setAmbientOn(!ambientOn)}
+              role="switch" aria-checked={ambientOn} aria-label="Ambient soundscape" style={{
               width: 44, height: 24, borderRadius: 12, border: 'none',
               background: ambientOn ? COLOR : '#252530', cursor: 'pointer', position: 'relative',
             }}>
@@ -228,7 +234,7 @@ export default function NsdrProtocol() {
         border: '1px solid #1e1e26', marginBottom: 20,
         boxShadow: isActive ? `0 0 80px ${COLOR}08` : 'none',
       }}>
-        <RestCircle progress={nsdrNarration.progress} isActive={isActive} />
+        <RestCircle progress={nsdrNarration.progress} isActive={isActive} reduced={reduced} />
 
         {isActive && nsdrNarration.currentText && (
           <div style={{
@@ -259,7 +265,7 @@ export default function NsdrProtocol() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button onClick={isActive ? handleStop : handleStart} style={{
+          <button onClick={isActive ? handleStop : handleStart} aria-label={isActive ? 'End NSDR session' : 'Begin NSDR session'} style={{
             width: isActive ? 140 : 180, padding: '14px 0', borderRadius: 14, border: 'none',
             background: isActive ? '#222' : `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',

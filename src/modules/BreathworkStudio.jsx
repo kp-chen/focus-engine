@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 // Breathing patterns: each phase has { label, duration (ms), action: 'inhale'|'exhale'|'hold' }
@@ -56,13 +57,18 @@ function haptic(ms = 30) {
 }
 
 // Animated breathing circle component
-function BreathCircle({ phase, progress, action, color, isActive }) {
+function BreathCircle({ phase, progress, action, color, isActive, reduced }) {
   // Scale: inhale expands, exhale contracts, hold stays
   const baseSize = 0.45;
   const maxSize = 1.0;
 
   let scale;
-  if (!isActive) {
+  if (reduced) {
+    // Motion-sensitive users: hold the circle at a neutral size. The phase label
+    // and progress ring still update, so the breathing guidance (inhale / hold /
+    // exhale + timing) is fully preserved without the expand/contract motion.
+    scale = (baseSize + maxSize) / 2;
+  } else if (!isActive) {
     scale = baseSize;
   } else if (action === 'inhale') {
     scale = baseSize + (maxSize - baseSize) * progress;
@@ -181,6 +187,7 @@ function formatTime(s) {
 
 export default function BreathworkStudio() {
   const { startSession, endSession } = useCognitive();
+  const reduced = useReducedMotion();
   const color = MODULE_COLORS.breathe;
 
   const [patternId, setPatternId] = useState('cyclic');
@@ -378,6 +385,7 @@ export default function BreathworkStudio() {
           action={currentPhase?.action}
           color={color}
           isActive={isActive}
+          reduced={reduced}
         />
 
         <PhaseIndicator
@@ -414,7 +422,7 @@ export default function BreathworkStudio() {
 
         {/* Play/Stop button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button onClick={toggle} style={{
+          <button onClick={toggle} aria-label={isActive ? 'Stop breathing session' : 'Start breathing session'} style={{
             width: isActive ? 140 : 160,
             padding: '14px 0',
             borderRadius: 14,

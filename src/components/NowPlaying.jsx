@@ -58,7 +58,7 @@ export default function NowPlaying() {
                 width: 8, height: 8, borderRadius: '50%', background: color,
                 boxShadow: `0 0 6px ${color}80`, animation: 'pulse 2s ease-in-out infinite', flexShrink: 0,
               }} />
-              <button onClick={() => navigate(meta.path)} style={{
+              <button onClick={() => navigate(meta.path)} aria-label={`Open ${meta.label}`} style={{
                 flex: 1, minWidth: 0, background: 'none', border: 'none', cursor: 'pointer',
                 textAlign: 'left', padding: 0, fontFamily: "'DM Sans', sans-serif",
               }}>
@@ -73,7 +73,7 @@ export default function NowPlaying() {
                 e.stopPropagation();
                 if (id === 'nsdr') stopNsdrSession();
                 else stopEngine(id);
-              }} style={{
+              }} aria-label={`Stop ${meta.label}`} style={{
                 width: 28, height: 28, borderRadius: 8,
                 background: '#1a1a22', border: '1px solid #252530',
                 color: '#666', fontSize: 10, cursor: 'pointer',

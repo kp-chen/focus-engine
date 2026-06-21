@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { getAudioContext } from '../lib/audioContext';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.timer;
@@ -39,7 +40,7 @@ function chime() {
   } catch {}
 }
 
-function CircleTimer({ progress, phase, color, timeStr }) {
+function CircleTimer({ progress, phase, color, timeStr, reduced }) {
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - progress);
@@ -54,7 +55,9 @@ function CircleTimer({ progress, phase, color, timeStr }) {
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           transform="rotate(-90 110 110)"
-          style={{ transition: 'stroke-dashoffset 1s linear' }}
+          // Reduced motion: snap the ring to each tick instead of the smooth
+          // 1s sweep. The numeric countdown stays the primary cue either way.
+          style={{ transition: reduced ? 'none' : 'stroke-dashoffset 1s linear' }}
         />
       </svg>
       <div style={{
@@ -125,6 +128,7 @@ function FocusRating({ onRate }) {
 export default function UltradianTimer() {
   const { startSession, endSession } = useCognitive();
   const { isRunning: isFocusRunning } = useAudioEngine();
+  const reduced = useReducedMotion();
 
   const [preset, setPreset] = useState(PRESETS[2]); // Default to 90/20
   const [phase, setPhase] = useState('idle'); // idle | work | rating | rest | done
@@ -298,6 +302,7 @@ export default function UltradianTimer() {
             phase={phase}
             color={COLOR}
             timeStr={formatTime(remaining)}
+            reduced={reduced}
           />
 
           <div style={{ textAlign: 'center', marginTop: 16 }}>
@@ -310,7 +315,7 @@ export default function UltradianTimer() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-            <button onClick={stopTimer} style={{
+            <button onClick={stopTimer} aria-label="Stop timer" style={{
               padding: '10px 32px', borderRadius: 10,
               background: '#1a1a22', border: '1px solid #252530',
               color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer',
