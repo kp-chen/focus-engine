@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 const MODES = [
@@ -16,7 +17,7 @@ const TEXTURES = [
   { id: 'binaural', label: 'Drone' },
 ];
 
-function Visualizer({ analyser, isPlaying, color }) {
+function Visualizer({ analyser, isPlaying, color, reduced }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
 
@@ -31,7 +32,7 @@ function Visualizer({ analyser, isPlaying, color }) {
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
 
-    const draw = () => {
+    const renderFrame = () => {
       c.clearRect(0, 0, w, h);
       if (analyser && isPlaying) {
         const data = new Uint8Array(analyser.frequencyBinCount);
@@ -50,17 +51,31 @@ function Visualizer({ analyser, isPlaying, color }) {
         c.strokeStyle = color + '30';
         c.lineWidth = 1.5;
         c.beginPath();
+        // A flat baseline when reduced (no time-driven ripple); a gentle wave
+        // otherwise. The reduced branch reads no clock, so the static frame is
+        // stable.
         for (let x = 0; x < w; x++) {
-          const y = h / 2 + Math.sin(x * 0.02 + Date.now() * 0.001) * 8;
+          const y = h / 2 + (reduced ? 0 : Math.sin(x * 0.02 + Date.now() * 0.001) * 8);
           x === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
         }
         c.stroke();
       }
-      rafRef.current = requestAnimationFrame(draw);
     };
-    draw();
+
+    // Reduced motion: paint a single static frame (a snapshot of the current
+    // spectrum, or a flat line) and skip the animation loop. Audio is unaffected.
+    if (reduced) {
+      renderFrame();
+      return;
+    }
+
+    const loop = () => {
+      renderFrame();
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    loop();
     return () => cancelAnimationFrame(rafRef.current);
-  }, [analyser, isPlaying, color]);
+  }, [analyser, isPlaying, color, reduced]);
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />;
 }
@@ -83,6 +98,7 @@ export default function FocusEngine() {
 
   const playing = isRunning('focus');
   const analyser = getAnalyser('focus');
+  const reduced = useReducedMotion();
   const color = MODULE_COLORS.focus;
   const timerRef = useRef(null);
 
@@ -165,13 +181,13 @@ export default function FocusEngine() {
         border: '1px solid #1e1e26', boxShadow: `0 0 60px ${color}08`,
       }}>
         <div style={{ height: 90, marginBottom: 16, borderRadius: 8, overflow: 'hidden' }}>
-          <Visualizer analyser={analyser} isPlaying={playing} color={color} />
+          <Visualizer analyser={analyser} isPlaying={playing} color={color} reduced={reduced} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, color: '#888', minWidth: 60, textAlign: 'center' }}>
             {formatTime(elapsed)}
           </span>
-          <button onClick={toggle} style={{
+          <button onClick={toggle} aria-label={playing ? 'Stop focus audio' : 'Play focus audio'} style={{
             width: 60, height: 60, borderRadius: '50%', border: 'none',
             background: playing ? '#222' : `linear-gradient(135deg, ${color}, ${color}cc)`,
             color: '#fff', fontSize: 22, cursor: 'pointer',
@@ -250,6 +266,18 @@ export default function FocusEngine() {
         <a href="https://www.nature.com/articles/s42003-024-07026-3" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40`, fontSize: 11 }}>
           Read study →
         </a>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+          For the binaural texture specifically, a meta-analysis found binaural beats have a medium effect (g=0.45) on cognition and anxiety.{' '}
+          <a href="https://doi.org/10.1007/s00426-018-1066-8" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            Garcia-Argibay et al. (2019) →
+          </a>
+        </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+          For noise textures, a meta-analysis found white/pink noise gives a modest task-performance benefit, mainly in those with attention difficulties.{' '}
+          <a href="https://doi.org/10.1016/j.jaac.2023.12.014" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            SR + meta-analysis (2024) →
+          </a>
+        </div>
       </div>
     </div>
   );

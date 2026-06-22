@@ -1,21 +1,25 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { NBACK_LETTERS } from '../lib/voiceContent';
+import { speakLetterPremium, preloadLetters, getVoices } from '../lib/voice';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.nback;
 
-// Audio letters for auditory channel
-const LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T'];
+// Auditory channel letters (shared with the voice pre-render).
+const LETTERS = NBACK_LETTERS;
 
-// Speech synthesis for letters
-function speakLetter(letter) {
-  try {
-    const u = new SpeechSynthesisUtterance(letter);
-    u.rate = 0.9;
-    u.pitch = 1.0;
-    u.volume = 0.8;
-    speechSynthesis.speak(u);
-  } catch {}
+// Speak a letter: pre-rendered ElevenLabs audio when available, else SpeechSynthesis.
+function speakLetter(voiceId, letter) {
+  speakLetterPremium(voiceId, letter, (l) => {
+    try {
+      const u = new SpeechSynthesisUtterance(l);
+      u.rate = 0.9;
+      u.pitch = 1.0;
+      u.volume = 0.8;
+      speechSynthesis.speak(u);
+    } catch {}
+  });
 }
 
 // Generate a sequence with controlled match rate (~30% matches for each channel)
@@ -45,7 +49,7 @@ function generateSequence(length, n) {
 }
 
 // 3x3 Grid component
-function Grid({ activeCell, showFeedback, feedbackType }) {
+function Grid({ activeCell }) {
   return (
     <div style={{
       display: 'grid',
@@ -119,7 +123,7 @@ const TUTORIAL_STEPS = [
   },
 ];
 
-function Tutorial({ nLevel, onDone }) {
+function Tutorial({ onDone }) {
   const [step, setStep] = useState(0);
   const [seqIndex, setSeqIndex] = useState(0);
   const s = TUTORIAL_STEPS[step];
@@ -136,7 +140,7 @@ function Tutorial({ nLevel, onDone }) {
       });
     }, 1500);
     return () => clearInterval(iv);
-  }, [step, hasSeq]);
+  }, [step, hasSeq, s.sequence]);
 
   const activePos = hasSeq ? s.sequence[seqIndex].pos : s.grid;
   const activeLetter = hasSeq ? s.sequence[seqIndex].letter : s.letter;
@@ -243,10 +247,14 @@ function ResponseButton({ label, sublabel, active, correct, wrong, onPress, disa
   else if (active && wrong) { bg = '#3a1a1a'; border = '#6a2a2a'; }
   else if (active) { bg = COLOR + '15'; border = COLOR + '40'; }
 
+  const state = !active ? '' : correct ? ' — correct' : wrong ? ' — wrong' : ' — selected';
+
   return (
     <button
       onClick={onPress}
       disabled={disabled}
+      aria-pressed={active}
+      aria-label={`${label} match${state}`}
       style={{
         flex: 1,
         padding: '14px 8px',
@@ -334,11 +342,22 @@ function Results({ stats, nLevel, onRestart, onClose }) {
 }
 
 export default function DualNBack() {
-  const { startSession, endSession } = useCognitive();
+  const { startSession, endSession, state, updateSettings } = useCognitive();
+
+  const [premiumVoices, setPremiumVoices] = useState([]);
+  const nbackVoice = state.settings.nbackVoice;
+  useEffect(() => { getVoices().then(setPremiumVoices); }, []);
+
+  // Snap to a rendered voice if the saved one is no longer available.
+  useEffect(() => {
+    if (premiumVoices.length && !premiumVoices.some(v => v.id === nbackVoice)) {
+      updateSettings({ nbackVoice: premiumVoices[0].id });
+    }
+  }, [premiumVoices, nbackVoice, updateSettings]);
 
   const [nLevel, setNLevel] = useState(2);
   const [trialCount, setTrialCount] = useState(20);
-  const [gameState, setGameState] = useState('setup'); // setup | playing | feedback | results
+  const [gameState, setGameState] = useState('setup'); // setup | tutorial | playing | results
   const [currentTrial, setCurrentTrial] = useState(0);
   const [activeCell, setActiveCell] = useState(-1);
   const [activeLetter, setActiveLetter] = useState('');
@@ -354,123 +373,57 @@ export default function DualNBack() {
     posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
     audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
   });
-  const timeoutRef = useRef(null);
   const trialRef = useRef(0);
 
   const STIMULUS_TIME = 500;  // ms stimulus shown
   const RESPONSE_TIME = 2500; // ms total per trial
 
+  // The trial loop reads the latest values from refs, so the timeouts it
+  // schedules never capture stale state. (The previous version only applied the
+  // ref-based scorer to trial 0; from trial 2 onward it fell back into a loop
+  // whose scheduled scorer had captured posPressed/audPressed as false, so the
+  // player's responses were silently never counted.)
+  const posPressedRef = useRef(false);
+  const audPressedRef = useRef(false);
+  const nLevelRef = useRef(nLevel);
+  const nbackVoiceRef = useRef(nbackVoice);
+  useEffect(() => { posPressedRef.current = posPressed; }, [posPressed]);
+  useEffect(() => { audPressedRef.current = audPressed; }, [audPressed]);
+  useEffect(() => { nLevelRef.current = nLevel; }, [nLevel]);
+  useEffect(() => { nbackVoiceRef.current = nbackVoice; }, [nbackVoice]);
+
+  // Two pending timers per trial: the stimulus-hide and the score/advance. Both
+  // are tracked so clearTimers() can cancel them on End Session / unmount and
+  // nothing fires after the game has stopped.
+  const stimulusTimerRef = useRef(null);
+  const advanceTimerRef = useRef(null);
+
   const clearTimers = useCallback(() => {
-    clearTimeout(timeoutRef.current);
+    clearTimeout(stimulusTimerRef.current);
+    clearTimeout(advanceTimerRef.current);
+    // Silence any queued/in-progress spoken letter so nothing is audible after
+    // the game stops (End Session / unmount / restart).
+    try { speechSynthesis.cancel(); } catch {}
   }, []);
 
-  const startGame = useCallback(() => {
-    const seq = generateSequence(trialCount + nLevel, nLevel);
-    seqRef.current = seq;
-    statsRef.current = {
-      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
-      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
-    };
-    trialRef.current = 0;
-    setCurrentTrial(0);
-    setGameState('playing');
-    setStats(null);
-    startSession('nback');
-    // Start first trial after short delay
-    setTimeout(() => showTrial(0), 600);
-  }, [trialCount, nLevel, startSession]);
-
-  const showTrial = useCallback((index) => {
-    const seq = seqRef.current;
-    if (!seq || index >= seq.positions.length) {
-      finishGame();
-      return;
-    }
-
-    trialRef.current = index;
-    setCurrentTrial(index);
-    setPosPressed(false);
-    setAudPressed(false);
-    setPosFeedback(null);
-    setAudFeedback(null);
-
-    // Show stimulus
-    setActiveCell(seq.positions[index]);
-    setActiveLetter(seq.letters[index]);
-    setShowingStimulus(true);
-    speakLetter(seq.letters[index]);
-
-    // Hide stimulus after STIMULUS_TIME
-    timeoutRef.current = setTimeout(() => {
-      setActiveCell(-1);
-      setShowingStimulus(false);
-    }, STIMULUS_TIME);
-
-    // End trial after RESPONSE_TIME → score and advance
-    setTimeout(() => {
-      scoreTrial(index);
-    }, RESPONSE_TIME);
-  }, [nLevel]);
+  // showTrial ⇄ scoreTrial call each other; the indirection through refs avoids
+  // a useCallback dependency cycle while keeping both stable.
+  const showTrialRef = useRef(null);
+  const finishGameRef = useRef(null);
 
   const scoreTrial = useCallback((index) => {
     const seq = seqRef.current;
     if (!seq) return;
 
     const s = statsRef.current;
-    const isPosMatch = seq.posMatches.has(index);
-    const isAudMatch = seq.audMatches.has(index);
-
-    // Only score trials where n-back comparison is possible
-    if (index >= nLevel) {
-      // Position
-      if (isPosMatch && posPressed) s.posHits++;
-      else if (isPosMatch && !posPressed) s.posMisses++;
-      else if (!isPosMatch && posPressed) s.posFalseAlarms++;
-      else s.posCorrectRejects++;
-
-      // Audio
-      if (isAudMatch && audPressed) s.audHits++;
-      else if (isAudMatch && !audPressed) s.audMisses++;
-      else if (!isAudMatch && audPressed) s.audFalseAlarms++;
-      else s.audCorrectRejects++;
-    }
-
-    // Brief feedback
-    if (index >= nLevel) {
-      const pc = (isPosMatch && posPressed) || (!isPosMatch && !posPressed) ? 'correct' : 'wrong';
-      const ac = (isAudMatch && audPressed) || (!isAudMatch && !audPressed) ? 'correct' : 'wrong';
-      setPosFeedback(pc);
-      setAudFeedback(ac);
-    }
-
-    // Advance or finish
-    const nextIndex = index + 1;
-    if (nextIndex >= seq.positions.length) {
-      setTimeout(() => finishGame(), 400);
-    } else {
-      setTimeout(() => showTrial(nextIndex), 400);
-    }
-  }, [nLevel, posPressed, audPressed]);
-
-  // We need posPressed/audPressed at score time, so use refs
-  const posPressedRef = useRef(false);
-  const audPressedRef = useRef(false);
-
-  useEffect(() => { posPressedRef.current = posPressed; }, [posPressed]);
-  useEffect(() => { audPressedRef.current = audPressed; }, [audPressed]);
-
-  // Override scoreTrial to use refs
-  const scoreTrialReal = useCallback((index) => {
-    const seq = seqRef.current;
-    if (!seq) return;
-
-    const s = statsRef.current;
+    const n = nLevelRef.current;
     const isPosMatch = seq.posMatches.has(index);
     const isAudMatch = seq.audMatches.has(index);
     const pp = posPressedRef.current;
     const ap = audPressedRef.current;
 
-    if (index >= nLevel) {
+    // Only score trials where an n-back comparison is possible
+    if (index >= n) {
       if (isPosMatch && pp) s.posHits++;
       else if (isPosMatch && !pp) s.posMisses++;
       else if (!isPosMatch && pp) s.posFalseAlarms++;
@@ -481,25 +434,22 @@ export default function DualNBack() {
       else if (!isAudMatch && ap) s.audFalseAlarms++;
       else s.audCorrectRejects++;
 
-      const pc = (isPosMatch && pp) || (!isPosMatch && !pp) ? 'correct' : 'wrong';
-      const ac = (isAudMatch && ap) || (!isAudMatch && !ap) ? 'correct' : 'wrong';
-      setPosFeedback(pc);
-      setAudFeedback(ac);
+      setPosFeedback((isPosMatch && pp) || (!isPosMatch && !pp) ? 'correct' : 'wrong');
+      setAudFeedback((isAudMatch && ap) || (!isAudMatch && !ap) ? 'correct' : 'wrong');
     }
 
     const nextIndex = index + 1;
     if (nextIndex >= seq.positions.length) {
-      setTimeout(() => finishGame(), 400);
+      advanceTimerRef.current = setTimeout(() => finishGameRef.current?.(), 400);
     } else {
-      setTimeout(() => showTrial(nextIndex), 400);
+      advanceTimerRef.current = setTimeout(() => showTrialRef.current?.(nextIndex), 400);
     }
-  }, [nLevel]);
+  }, []);
 
-  // Patch showTrial to use scoreTrialReal
-  const showTrialPatched = useCallback((index) => {
+  const showTrial = useCallback((index) => {
     const seq = seqRef.current;
     if (!seq || index >= seq.positions.length) {
-      finishGame();
+      finishGameRef.current?.();
       return;
     }
 
@@ -511,20 +461,24 @@ export default function DualNBack() {
     audPressedRef.current = false;
     setPosFeedback(null);
     setAudFeedback(null);
+
+    // Show stimulus
     setActiveCell(seq.positions[index]);
     setActiveLetter(seq.letters[index]);
     setShowingStimulus(true);
-    speakLetter(seq.letters[index]);
+    speakLetter(nbackVoiceRef.current, seq.letters[index]);
 
-    timeoutRef.current = setTimeout(() => {
+    // Hide stimulus after STIMULUS_TIME
+    stimulusTimerRef.current = setTimeout(() => {
       setActiveCell(-1);
       setShowingStimulus(false);
     }, STIMULUS_TIME);
 
-    setTimeout(() => {
-      scoreTrialReal(index);
-    }, RESPONSE_TIME);
-  }, [scoreTrialReal]);
+    // End trial after RESPONSE_TIME → score and advance
+    advanceTimerRef.current = setTimeout(() => scoreTrial(index), RESPONSE_TIME);
+  }, [scoreTrial]);
+
+  useEffect(() => { showTrialRef.current = showTrial; }, [showTrial]);
 
   const finishGame = useCallback(() => {
     clearTimers();
@@ -548,10 +502,33 @@ export default function DualNBack() {
     });
   }, [clearTimers, endSession, nLevel, trialCount]);
 
+  useEffect(() => { finishGameRef.current = finishGame; }, [finishGame]);
+
+  const startGame = useCallback(() => {
+    clearTimers();
+    preloadLetters(nbackVoiceRef.current); // warm the pre-rendered letter audio (inside this gesture)
+    const seq = generateSequence(trialCount + nLevel, nLevel);
+    seqRef.current = seq;
+    statsRef.current = {
+      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
+      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
+    };
+    trialRef.current = 0;
+    setCurrentTrial(0);
+    setGameState('playing');
+    setStats(null);
+    startSession('nback');
+    // Start first trial after a short delay
+    advanceTimerRef.current = setTimeout(() => showTrial(0), 600);
+  }, [trialCount, nLevel, startSession, showTrial, clearTimers]);
+
   // Keyboard shortcuts
   useEffect(() => {
     if (gameState !== 'playing') return;
     const handler = (e) => {
+      // Match the on-screen buttons, which are disabled during the memorise
+      // lead-in (currentTrial < nLevel).
+      if (trialRef.current < nLevelRef.current) return;
       if (e.key === 'a' || e.key === 'A') {
         setPosPressed(true);
         posPressedRef.current = true;
@@ -565,24 +542,8 @@ export default function DualNBack() {
     return () => window.removeEventListener('keydown', handler);
   }, [gameState]);
 
-  // Cleanup
+  // Cleanup any pending timers on unmount
   useEffect(() => () => clearTimers(), [clearTimers]);
-
-  // Start game with patched function
-  const startGamePatched = useCallback(() => {
-    const seq = generateSequence(trialCount + nLevel, nLevel);
-    seqRef.current = seq;
-    statsRef.current = {
-      posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
-      audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
-    };
-    trialRef.current = 0;
-    setCurrentTrial(0);
-    setGameState('playing');
-    setStats(null);
-    startSession('nback');
-    setTimeout(() => showTrialPatched(0), 600);
-  }, [trialCount, nLevel, startSession, showTrialPatched]);
 
   const totalTrials = seqRef.current ? seqRef.current.positions.length : trialCount + nLevel;
   const progress = gameState === 'playing' ? currentTrial / totalTrials : 0;
@@ -655,6 +616,25 @@ export default function DualNBack() {
             </div>
           </div>
 
+          {/* Letter voice */}
+          {premiumVoices.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <label htmlFor="nback-voice" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Letter voice
+              </label>
+              <select id="nback-voice" value={nbackVoice} onChange={e => updateSettings({ nbackVoice: e.target.value })} style={{
+                width: '100%', padding: '12px', borderRadius: 10,
+                background: '#111116', border: '1px solid #1e1e26',
+                color: '#e8e8ec', fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                appearance: 'none', cursor: 'pointer',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+              }}>
+                {premiumVoices.map(v => <option key={v.id} value={v.id}>{v.name}{v.desc ? ` — ${v.desc}` : ''}</option>)}
+              </select>
+            </div>
+          )}
+
           {/* Instructions */}
           <div style={{
             background: '#111116', borderRadius: 14, padding: 16,
@@ -688,7 +668,7 @@ export default function DualNBack() {
             </button>
 
           {/* Start button */}
-          <button onClick={startGamePatched} style={{
+          <button onClick={startGame} style={{
             flex: 2, padding: '16px', borderRadius: 14,
             background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             border: 'none', color: '#fff', fontSize: 16, fontWeight: 600,
@@ -702,7 +682,7 @@ export default function DualNBack() {
       )}
 
       {/* Tutorial */}
-      {gameState === 'tutorial' && <Tutorial nLevel={nLevel} onDone={() => setGameState('setup')} />}
+      {gameState === 'tutorial' && <Tutorial onDone={() => setGameState('setup')} />}
 
       {/* Playing screen */}
       {gameState === 'playing' && (
@@ -808,7 +788,7 @@ export default function DualNBack() {
           <Results
             stats={stats}
             nLevel={nLevel}
-            onRestart={startGamePatched}
+            onRestart={startGame}
             onClose={() => setGameState('setup')}
           />
         </div>
@@ -826,9 +806,15 @@ export default function DualNBack() {
           </span>
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
-            Meta-analysis of 33 RCTs found medium transfer to untrained WM tasks and small but significant effects on fluid intelligence and cognitive control.
+            A meta-analysis of 33 n-back RCTs found the transfer is largely task-specific — effects on fluid intelligence and cognitive control were small. Train it to sharpen working memory, not as a guaranteed IQ boost.
             <a href="https://doi.org/10.3758/s13423-016-1217-0" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, marginLeft: 4, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Soveri et al. (2017) →
+            </a>
+          </div>
+          <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
+            A 2024 meta-analysis (n=7,765 adults) found cognitive training improves working memory, verbal memory, and executive function.{' '}
+            <a href="https://doi.org/10.1007/s11065-024-09649-z" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
+              Zhu et al. (2024) →
             </a>
           </div>
         </div>

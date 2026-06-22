@@ -10,7 +10,7 @@ export default function TabBar() {
   ) || TABS[0];
 
   return (
-    <nav style={{
+    <nav aria-label="Primary" style={{
       position: 'fixed',
       bottom: 0,
       left: 0,
@@ -36,6 +36,8 @@ export default function TabBar() {
             <button
               key={tab.id}
               onClick={() => navigate(tab.path)}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
               style={{
                 flex: 1,
                 display: 'flex',

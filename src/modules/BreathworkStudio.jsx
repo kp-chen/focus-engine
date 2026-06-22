@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 // Breathing patterns: each phase has { label, duration (ms), action: 'inhale'|'exhale'|'hold' }
@@ -20,7 +21,7 @@ const PATTERNS = {
     id: 'box',
     label: 'Box Breathing',
     desc: 'Equal inhale, hold, exhale, hold — used by Navy SEALs',
-    science: 'Ma et al. (2017), Frontiers in Psychology — diaphragmatic breathing reduces cortisol and improves sustained attention. US military adoption based on autonomic downregulation evidence.',
+    science: 'Ma et al. (2017), Frontiers in Psychology — in a controlled trial of healthy adults, diaphragmatic breathing reduced cortisol and improved sustained attention.',
     url: 'https://doi.org/10.3389/fpsyg.2017.00874',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
@@ -33,8 +34,8 @@ const PATTERNS = {
     id: 'relaxing',
     label: '4-7-8 Relaxing',
     desc: 'Extended exhale activates parasympathetic response',
-    science: 'Weil (2015) — based on pranayama tradition. Extended exhalation increases vagal tone and shifts autonomic balance toward rest-and-digest.',
-    url: 'https://doi.org/10.1016/j.mehy.2009.01.045',
+    science: 'Zaccaro et al. (2018), Front Hum Neurosci — a systematic review found slow breathing with extended exhalation raises heart-rate variability and parasympathetic (vagal) tone, shifting autonomic balance toward rest-and-digest. (The 4-7-8 pattern was popularized by Andrew Weil.)',
+    url: 'https://doi.org/10.3389/fnhum.2018.00353',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
       { label: 'Hold', duration: 7000, action: 'hold' },
@@ -56,13 +57,18 @@ function haptic(ms = 30) {
 }
 
 // Animated breathing circle component
-function BreathCircle({ phase, progress, action, color, isActive }) {
+function BreathCircle({ phase, progress, action, color, isActive, reduced }) {
   // Scale: inhale expands, exhale contracts, hold stays
   const baseSize = 0.45;
   const maxSize = 1.0;
 
   let scale;
-  if (!isActive) {
+  if (reduced) {
+    // Motion-sensitive users: hold the circle at a neutral size. The phase label
+    // and progress ring still update, so the breathing guidance (inhale / hold /
+    // exhale + timing) is fully preserved without the expand/contract motion.
+    scale = (baseSize + maxSize) / 2;
+  } else if (!isActive) {
     scale = baseSize;
   } else if (action === 'inhale') {
     scale = baseSize + (maxSize - baseSize) * progress;
@@ -181,6 +187,7 @@ function formatTime(s) {
 
 export default function BreathworkStudio() {
   const { startSession, endSession } = useCognitive();
+  const reduced = useReducedMotion();
   const color = MODULE_COLORS.breathe;
 
   const [patternId, setPatternId] = useState('cyclic');
@@ -378,6 +385,7 @@ export default function BreathworkStudio() {
           action={currentPhase?.action}
           color={color}
           isActive={isActive}
+          reduced={reduced}
         />
 
         <PhaseIndicator
@@ -414,7 +422,7 @@ export default function BreathworkStudio() {
 
         {/* Play/Stop button */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-          <button onClick={toggle} style={{
+          <button onClick={toggle} aria-label={isActive ? 'Stop breathing session' : 'Start breathing session'} style={{
             width: isActive ? 140 : 160,
             padding: '14px 0',
             borderRadius: 14,
@@ -460,6 +468,12 @@ export default function BreathworkStudio() {
           <span style={{ color: color, fontWeight: 600 }}>Evidence:</span>{' '}{pattern.science}{' '}
           <a href={pattern.url} target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
             Read study →
+          </a>
+        </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+          A 2025 meta-analysis of pranayama RCTs found slow breathing eases symptom severity, while fast breathing carried more adverse events — so the slow patterns here are the safer default.{' '}
+          <a href="https://doi.org/10.3389/fpsyt.2025.1616996" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            Mütze et al. (2025) →
           </a>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { getAudioContext } from '../lib/audioContext';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = '#d4537e'; // pink from our palette — calming but distinct
@@ -38,9 +40,10 @@ function haptic(ms = 15) {
   try { navigator?.vibrate?.(ms); } catch {}
 }
 
-// Audio engine for bilateral tones
+// Audio engine for bilateral tones. Uses the shared AudioContext; teardown stops
+// the oscillator and disconnects the envelope rather than closing the context.
 function createBilateralEngine(freq, type) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = getAudioContext();
   const osc = ctx.createOscillator();
   osc.type = type;
   osc.frequency.value = freq;
@@ -62,9 +65,11 @@ function createBilateralEngine(freq, type) {
 }
 
 // Visual tracking dot
-function TrackingDot({ position, isActive, color }) {
-  // position: 0 = left, 1 = right
-  const x = 10 + position * 80; // percentage
+function TrackingDot({ position, isActive, color, reduced }) {
+  // position: 0 = left, 1 = right. Under reduced motion the dot is pinned to the
+  // centre and does not slide — the L/R pan indicator and (in audio modes) the
+  // alternating tone carry the rhythm without the side-to-side eye movement.
+  const x = reduced ? 50 : 10 + position * 80; // percentage
 
   return (
     <div style={{
@@ -107,7 +112,9 @@ function TrackingDot({ position, isActive, color }) {
         borderRadius: '50%',
         background: isActive ? color : '#333',
         boxShadow: isActive ? `0 0 16px ${color}60, 0 0 32px ${color}20` : 'none',
-        transition: `left ${isActive ? '0.08s' : '0.5s'} linear, width 0.3s, height 0.3s, background 0.3s`,
+        transition: reduced
+          ? 'width 0.3s, height 0.3s, background 0.3s'
+          : `left ${isActive ? '0.08s' : '0.5s'} linear, width 0.3s, height 0.3s, background 0.3s`,
       }} />
     </div>
   );
@@ -136,6 +143,7 @@ function PanIndicator({ side, isActive }) {
 
 export default function BilateralStimulation() {
   const { startSession, endSession } = useCognitive();
+  const reduced = useReducedMotion();
 
   const [mode, setMode] = useState(MODES[2]); // default: both
   const [speed, setSpeed] = useState(SPEEDS[1]); // default: medium
@@ -163,10 +171,10 @@ export default function BilateralStimulation() {
     cancelAnimationFrame(animRef.current);
 
     if (engineRef.current) {
-      const { ctx, osc, envelope } = engineRef.current;
+      const { osc, envelope } = engineRef.current;
       envelope.gain.value = 0;
       try { osc.stop(); } catch {}
-      try { ctx.close(); } catch {}
+      try { envelope.disconnect(); } catch {} // sever from the shared destination
       engineRef.current = null;
     }
 
@@ -262,14 +270,14 @@ export default function BilateralStimulation() {
     }
   }, [volume]);
 
-  // Cleanup
+  // Cleanup — stop the note and disconnect, but leave the shared context open.
   useEffect(() => () => {
     activeRef.current = false;
     clearInterval(timerRef.current);
     cancelAnimationFrame(animRef.current);
     if (engineRef.current) {
       try { engineRef.current.osc.stop(); } catch {}
-      try { engineRef.current.ctx.close(); } catch {}
+      try { engineRef.current.envelope.disconnect(); } catch {}
     }
   }, []);
 
@@ -297,7 +305,8 @@ export default function BilateralStimulation() {
             <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Mode</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {MODES.map(m => (
-                <button key={m.id} onClick={() => setMode(m)} style={{
+                <button key={m.id} onClick={() => setMode(m)}
+                  aria-label={`${m.label} mode`} aria-pressed={mode.id === m.id} style={{
                   flex: 1, padding: '12px 8px', borderRadius: 12, textAlign: 'center',
                   border: `1px solid ${mode.id === m.id ? COLOR + '50' : '#1e1e26'}`,
                   background: mode.id === m.id ? COLOR + '10' : '#111116',
@@ -315,7 +324,8 @@ export default function BilateralStimulation() {
             <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Speed</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {SPEEDS.map(s => (
-                <button key={s.label} onClick={() => setSpeed(s)} style={{
+                <button key={s.label} onClick={() => setSpeed(s)}
+                  aria-label={`${s.label} speed`} aria-pressed={speed.label === s.label} style={{
                   flex: 1, padding: '10px 8px', borderRadius: 10, textAlign: 'center',
                   border: `1px solid ${speed.label === s.label ? COLOR + '50' : '#1e1e26'}`,
                   background: speed.label === s.label ? COLOR + '10' : '#111116',
@@ -334,7 +344,8 @@ export default function BilateralStimulation() {
               <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Tone</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {TONES.map(t => (
-                  <button key={t.label} onClick={() => setTone(t)} style={{
+                  <button key={t.label} onClick={() => setTone(t)}
+                    aria-label={`${t.label} tone`} aria-pressed={tone.label === t.label} style={{
                     flex: 1, padding: '10px 8px', borderRadius: 10,
                     border: `1px solid ${tone.label === t.label ? COLOR + '50' : '#1e1e26'}`,
                     background: tone.label === t.label ? COLOR + '10' : '#111116',
@@ -374,7 +385,7 @@ export default function BilateralStimulation() {
             </div>
           )}
 
-          <button onClick={start} style={{
+          <button onClick={start} aria-label="Begin bilateral stimulation" style={{
             width: '100%', padding: '16px', borderRadius: 14,
             background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             border: 'none', color: '#fff', fontSize: 16, fontWeight: 600,
@@ -404,7 +415,7 @@ export default function BilateralStimulation() {
           {/* Visual tracking (if enabled) */}
           {useVisual && (
             <div style={{ marginBottom: 16 }}>
-              <TrackingDot position={dotPosition} isActive={true} color={COLOR} />
+              <TrackingDot position={dotPosition} isActive={true} color={COLOR} reduced={reduced} />
             </div>
           )}
 
@@ -436,9 +447,11 @@ export default function BilateralStimulation() {
             background: '#0d0d14', borderRadius: 10,
             fontSize: 13, color: '#777', lineHeight: 1.5, fontStyle: 'italic',
           }}>
-            {useVisual
+            {useVisual && !reduced
               ? 'Follow the dot with your eyes while letting your mind process freely'
-              : 'Close your eyes and notice the tone alternating between ears'}
+              : useAudio
+                ? 'Close your eyes and notice the tone alternating between ears'
+                : 'Let your gaze track the L / R indicator below while your mind processes freely'}
           </div>
 
           {/* Volume slider during session */}
@@ -455,7 +468,7 @@ export default function BilateralStimulation() {
 
           {/* Stop */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-            <button onClick={stopAll} style={{
+            <button onClick={stopAll} aria-label="End bilateral stimulation session" style={{
               padding: '12px 40px', borderRadius: 12,
               background: '#1a1a22', border: '1px solid #252530',
               color: '#888', fontSize: 14, fontWeight: 600,
@@ -477,18 +490,14 @@ export default function BilateralStimulation() {
           </span>
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
-            EMDR is a WHO-recommended treatment for PTSD. Bilateral stimulation as a standalone component reduces subjective distress and physiological arousal.{' '}
-            <a href="https://pubmed.ncbi.nlm.nih.gov/24395404/" target="_blank" rel="noopener noreferrer"
+            EMDR is a WHO-recommended treatment for PTSD, and a meta-analysis found its bilateral eye-movement component has a significant additive effect on processing distressing memories (d ≈ 0.41 in therapy and 0.74 in lab studies).{' '}
+            <a href="https://doi.org/10.1016/j.jbtep.2012.11.001" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Lee & Cuijpers (2013) →
             </a>
           </div>
-          <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
-            Alternating auditory stimulation showed a medium effect size (g=0.45) for reducing anxiety across 22 studies in a meta-analysis.{' '}
-            <a href="https://pubmed.ncbi.nlm.nih.gov/30073406/" target="_blank" rel="noopener noreferrer"
-              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
-              Garcia-Argibay et al. (2019) →
-            </a>
+          <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+            Evidence for standalone bilateral stimulation, outside full EMDR therapy, remains limited.
           </div>
         </div>
       )}

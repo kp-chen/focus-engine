@@ -218,6 +218,7 @@ export default function Dashboard() {
     { id: 'nsdr', label: 'NSDR Protocol', icon: '◡', path: '/nsdr' },
     { id: 'timer', label: 'Ultradian Timer', icon: '◷', path: '/timer' },
     { id: 'bilateral', label: 'Bilateral Stim', icon: '⇋', path: '/bilateral' },
+    // HRV pacer hidden for now (see theme.js TABS) — re-add to re-list it here.
   ];
 
   const todayTotal = modules.reduce((sum, m) => sum + getTodayTotal(m.id), 0);
