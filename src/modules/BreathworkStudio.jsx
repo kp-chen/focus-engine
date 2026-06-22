@@ -21,7 +21,7 @@ const PATTERNS = {
     id: 'box',
     label: 'Box Breathing',
     desc: 'Equal inhale, hold, exhale, hold — used by Navy SEALs',
-    science: 'Ma et al. (2017), Frontiers in Psychology — diaphragmatic breathing reduces cortisol and improves sustained attention. US military adoption based on autonomic downregulation evidence.',
+    science: 'Ma et al. (2017), Frontiers in Psychology — in a controlled trial of healthy adults, diaphragmatic breathing reduced cortisol and improved sustained attention.',
     url: 'https://doi.org/10.3389/fpsyg.2017.00874',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
@@ -34,8 +34,8 @@ const PATTERNS = {
     id: 'relaxing',
     label: '4-7-8 Relaxing',
     desc: 'Extended exhale activates parasympathetic response',
-    science: 'Weil (2015) — based on pranayama tradition. Extended exhalation increases vagal tone and shifts autonomic balance toward rest-and-digest.',
-    url: 'https://doi.org/10.1016/j.mehy.2009.01.045',
+    science: 'Zaccaro et al. (2018), Front Hum Neurosci — a systematic review found slow breathing with extended exhalation raises heart-rate variability and parasympathetic (vagal) tone, shifting autonomic balance toward rest-and-digest. (The 4-7-8 pattern was popularized by Andrew Weil.)',
+    url: 'https://doi.org/10.3389/fnhum.2018.00353',
     phases: [
       { label: 'Inhale', duration: 4000, action: 'inhale' },
       { label: 'Hold', duration: 7000, action: 'hold' },

@@ -490,18 +490,14 @@ export default function BilateralStimulation() {
           </span>
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
-            EMDR is a WHO-recommended treatment for PTSD. Bilateral stimulation as a standalone component reduces subjective distress and physiological arousal.{' '}
-            <a href="https://pubmed.ncbi.nlm.nih.gov/24395404/" target="_blank" rel="noopener noreferrer"
+            EMDR is a WHO-recommended treatment for PTSD, and a meta-analysis found its bilateral eye-movement component has a significant additive effect on processing distressing memories (d ≈ 0.41 in therapy and 0.74 in lab studies).{' '}
+            <a href="https://doi.org/10.1016/j.jbtep.2012.11.001" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Lee & Cuijpers (2013) →
             </a>
           </div>
-          <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
-            Alternating auditory stimulation showed a medium effect size (g=0.45) for reducing anxiety across 22 studies in a meta-analysis.{' '}
-            <a href="https://pubmed.ncbi.nlm.nih.gov/30073406/" target="_blank" rel="noopener noreferrer"
-              style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
-              Garcia-Argibay et al. (2019) →
-            </a>
+          <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+            Evidence for standalone bilateral stimulation, outside full EMDR therapy, remains limited.
           </div>
         </div>
       )}

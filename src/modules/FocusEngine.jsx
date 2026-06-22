@@ -266,6 +266,12 @@ export default function FocusEngine() {
         <a href="https://www.nature.com/articles/s42003-024-07026-3" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40`, fontSize: 11 }}>
           Read study →
         </a>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+          For the binaural texture specifically, a meta-analysis found binaural beats have a medium effect (g=0.45) on cognition and anxiety.{' '}
+          <a href="https://doi.org/10.1007/s00426-018-1066-8" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            Garcia-Argibay et al. (2019) →
+          </a>
+        </div>
       </div>
     </div>
   );
