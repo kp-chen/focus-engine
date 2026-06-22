@@ -44,6 +44,7 @@ export default function App() {
                   <Route path="/nsdr" element={<NsdrProtocol />} />
                   <Route path="/timer" element={<UltradianTimer />} />
                   <Route path="/bilateral" element={<BilateralStimulation />} />
+                  {/* Hidden from nav (no TABS/Dashboard entry); route kept for iteration. */}
                   <Route path="/hrv" element={<HrvBiofeedback />} />
                 </Routes>
               </Suspense>

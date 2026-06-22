@@ -28,5 +28,6 @@ export const TABS = [
   { id: 'nsdr',       label: 'NSDR',    icon: '◡', path: '/nsdr' },
   { id: 'timer',      label: 'Timer',   icon: '◷', path: '/timer' },
   { id: 'bilateral',  label: 'BLS',     icon: '⇋', path: '/bilateral' },
-  { id: 'hrv',        label: 'HRV',     icon: '♡', path: '/hrv' },
+  // HRV pacer intentionally hidden from the nav for now (route + module kept;
+  // revisit with a real measurement layer before re-listing it here).
 ];
