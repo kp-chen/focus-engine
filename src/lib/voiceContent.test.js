@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { BODY_SCAN_SCRIPT, NSDR_FILLER, NBACK_LETTERS, nsdrSegmentKey } from './voiceContent';
+import {
+  BODY_SCAN_SCRIPT, NSDR_FILLER, NBACK_LETTERS, nsdrSegmentKey,
+  VOICE_OPTIONS, DEFAULT_NSDR_VOICE, DEFAULT_NBACK_VOICE, NSDR_SPEED,
+} from './voiceContent';
 
 describe('voiceContent', () => {
   it('keys base segments by index and repeated fillers as "filler"', () => {
@@ -21,5 +24,17 @@ describe('voiceContent', () => {
     expect(NBACK_LETTERS).toHaveLength(8);
     expect(new Set(NBACK_LETTERS).size).toBe(8);
     expect(NBACK_LETTERS.every(l => /^[A-Z]$/.test(l))).toBe(true);
+  });
+
+  it('default voices exist in VOICE_OPTIONS', () => {
+    const ids = VOICE_OPTIONS.map(v => v.id);
+    expect(ids).toContain(DEFAULT_NSDR_VOICE);
+    expect(ids).toContain(DEFAULT_NBACK_VOICE);
+    expect(VOICE_OPTIONS.every(v => v.id && v.name)).toBe(true);
+  });
+
+  it('NSDR cadence is a relaxing sub-1.0 speed', () => {
+    expect(NSDR_SPEED).toBeGreaterThanOrEqual(0.7);
+    expect(NSDR_SPEED).toBeLessThan(1.0);
   });
 });

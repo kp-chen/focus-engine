@@ -31,14 +31,24 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache every built asset (JS/CSS/HTML/fonts/icons + the pre-rendered
-        // voice MP3s and their manifest) so the app — including premium NSDR/
-        // N-Back narration — runs fully offline.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'],
-        // Voice audio can push the precache past the 2 MiB default cap.
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // Precache the app shell + fonts + icons + the voices manifest. The voice
+        // MP3s (~11 MB across all voices) are NOT precached — they're runtime-
+        // cached on first use (below), so only the voice you actually play is
+        // stored offline, not every option.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,json}'],
         // SPA: serve index.html for navigations when offline.
         navigateFallback: '/',
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/voices/') && url.pathname.endsWith('.mp3'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'voice-audio',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

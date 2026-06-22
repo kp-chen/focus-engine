@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { NBACK_LETTERS } from '../lib/voiceContent';
-import { speakLetterPremium, preloadLetters } from '../lib/voice';
+import { speakLetterPremium, preloadLetters, getVoices } from '../lib/voice';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.nback;
@@ -10,8 +10,8 @@ const COLOR = MODULE_COLORS.nback;
 const LETTERS = NBACK_LETTERS;
 
 // Speak a letter: pre-rendered ElevenLabs audio when available, else SpeechSynthesis.
-function speakLetter(letter) {
-  speakLetterPremium(letter, (l) => {
+function speakLetter(voiceId, letter) {
+  speakLetterPremium(voiceId, letter, (l) => {
     try {
       const u = new SpeechSynthesisUtterance(l);
       u.rate = 0.9;
@@ -342,7 +342,18 @@ function Results({ stats, nLevel, onRestart, onClose }) {
 }
 
 export default function DualNBack() {
-  const { startSession, endSession } = useCognitive();
+  const { startSession, endSession, state, updateSettings } = useCognitive();
+
+  const [premiumVoices, setPremiumVoices] = useState([]);
+  const nbackVoice = state.settings.nbackVoice;
+  useEffect(() => { getVoices().then(setPremiumVoices); }, []);
+
+  // Snap to a rendered voice if the saved one is no longer available.
+  useEffect(() => {
+    if (premiumVoices.length && !premiumVoices.some(v => v.id === nbackVoice)) {
+      updateSettings({ nbackVoice: premiumVoices[0].id });
+    }
+  }, [premiumVoices, nbackVoice, updateSettings]);
 
   const [nLevel, setNLevel] = useState(2);
   const [trialCount, setTrialCount] = useState(20);
@@ -375,9 +386,11 @@ export default function DualNBack() {
   const posPressedRef = useRef(false);
   const audPressedRef = useRef(false);
   const nLevelRef = useRef(nLevel);
+  const nbackVoiceRef = useRef(nbackVoice);
   useEffect(() => { posPressedRef.current = posPressed; }, [posPressed]);
   useEffect(() => { audPressedRef.current = audPressed; }, [audPressed]);
   useEffect(() => { nLevelRef.current = nLevel; }, [nLevel]);
+  useEffect(() => { nbackVoiceRef.current = nbackVoice; }, [nbackVoice]);
 
   // Two pending timers per trial: the stimulus-hide and the score/advance. Both
   // are tracked so clearTimers() can cancel them on End Session / unmount and
@@ -453,7 +466,7 @@ export default function DualNBack() {
     setActiveCell(seq.positions[index]);
     setActiveLetter(seq.letters[index]);
     setShowingStimulus(true);
-    speakLetter(seq.letters[index]);
+    speakLetter(nbackVoiceRef.current, seq.letters[index]);
 
     // Hide stimulus after STIMULUS_TIME
     stimulusTimerRef.current = setTimeout(() => {
@@ -493,7 +506,7 @@ export default function DualNBack() {
 
   const startGame = useCallback(() => {
     clearTimers();
-    preloadLetters(); // warm the pre-rendered letter audio (inside this gesture)
+    preloadLetters(nbackVoiceRef.current); // warm the pre-rendered letter audio (inside this gesture)
     const seq = generateSequence(trialCount + nLevel, nLevel);
     seqRef.current = seq;
     statsRef.current = {
@@ -602,6 +615,25 @@ export default function DualNBack() {
               ))}
             </div>
           </div>
+
+          {/* Letter voice */}
+          {premiumVoices.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <label htmlFor="nback-voice" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Letter voice
+              </label>
+              <select id="nback-voice" value={nbackVoice} onChange={e => updateSettings({ nbackVoice: e.target.value })} style={{
+                width: '100%', padding: '12px', borderRadius: 10,
+                background: '#111116', border: '1px solid #1e1e26',
+                color: '#e8e8ec', fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                appearance: 'none', cursor: 'pointer',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+              }}>
+                {premiumVoices.map(v => <option key={v.id} value={v.id}>{v.name}{v.desc ? ` — ${v.desc}` : ''}</option>)}
+              </select>
+            </div>
+          )}
 
           {/* Instructions */}
           <div style={{

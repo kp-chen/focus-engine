@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { useReducedMotion } from '../lib/useReducedMotion';
+import { getVoices, previewNsdrVoice } from '../lib/voice';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.nsdr;
@@ -76,7 +77,7 @@ function RestCircle({ progress, isActive, reduced }) {
 }
 
 export default function NsdrProtocol() {
-  const { startSession, endSession } = useCognitive();
+  const { startSession, endSession, state, updateSettings } = useCognitive();
   const { startNsdrSession, stopNsdrSession, nsdrNarration, setVolume } = useAudioEngine();
   const reduced = useReducedMotion();
 
@@ -84,30 +85,22 @@ export default function NsdrProtocol() {
   const [ambientOn, setAmbientOn] = useState(true);
   const [voiceVol, setVoiceVol] = useState(0.6);
   const [ambientVol, setAmbientVol] = useState(0.3);
-  const [voices, setVoices] = useState([]);
-  const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
+  const [premiumVoices, setPremiumVoices] = useState([]);
 
+  const nsdrVoice = state.settings.nsdrVoice;
   const isActive = nsdrNarration.active;
 
+  // Load the pre-rendered ElevenLabs voices for the picker. Empty when none are
+  // built, in which case narration transparently falls back to SpeechSynthesis.
+  useEffect(() => { getVoices().then(setPremiumVoices); }, []);
+
+  // If a previously-saved voice is no longer in the rendered set, snap to the
+  // first available so the picker and playback stay in sync (no blank select).
   useEffect(() => {
-    const loadVoices = () => {
-      const v = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
-      setVoices(v);
-      // Functional update so we don't capture a stale selectedVoiceURI, and only
-      // pick a default the first time (when none is chosen yet).
-      setSelectedVoiceURI(prev => {
-        if (prev || v.length === 0) return prev;
-        const preferred = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Google UK English Female', 'Microsoft Zira'];
-        const pick = v.find(voice => preferred.some(p => voice.name.includes(p))) || v[0];
-        return pick ? pick.voiceURI : prev;
-      });
-    };
-    loadVoices();
-    // addEventListener (not onvoiceschanged=) so we don't clobber other handlers,
-    // and the listener is removed on unmount instead of leaking on the global.
-    speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    return () => speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-  }, []);
+    if (premiumVoices.length && !premiumVoices.some(v => v.id === nsdrVoice)) {
+      updateSettings({ nsdrVoice: premiumVoices[0].id });
+    }
+  }, [premiumVoices, nsdrVoice, updateSettings]);
 
   useEffect(() => {
     if (isActive && ambientOn) setVolume('nsdr', ambientVol);
@@ -120,7 +113,7 @@ export default function NsdrProtocol() {
       ambientOn,
       ambientVol,
       voiceVol,
-      voiceURI: selectedVoiceURI,
+      nsdrVoiceId: nsdrVoice,
       onComplete: () => endSession({ duration, ambientOn }),
     });
   };
@@ -134,12 +127,12 @@ export default function NsdrProtocol() {
 
   // Preview voice
   const previewVoice = () => {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance('This is how your guided session will sound.');
-    u.rate = 0.75; u.pitch = 0.85; u.volume = voiceVol;
-    const v = speechSynthesis.getVoices().find(v => v.voiceURI === selectedVoiceURI);
-    if (v) u.voice = v;
-    speechSynthesis.speak(u);
+    previewNsdrVoice(nsdrVoice, voiceVol, () => {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance('This is how your guided session will sound.');
+      u.rate = 0.75; u.pitch = 0.85; u.volume = voiceVol;
+      speechSynthesis.speak(u);
+    });
   };
 
   return (
@@ -202,13 +195,13 @@ export default function NsdrProtocol() {
             {ambientOn && <VolumeSlider label="Ambient soundscape" value={ambientVol} onChange={setAmbientVol} color={COLOR} />}
           </div>
 
-          {voices.length > 0 && (
+          {premiumVoices.length > 0 && (
             <div style={{
               background: '#111116', borderRadius: 12, padding: 16,
               border: '1px solid #1e1e26', marginBottom: 20,
             }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Voice</label>
-              <select value={selectedVoiceURI} onChange={e => setSelectedVoiceURI(e.target.value)} style={{
+              <label htmlFor="nsdr-voice" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Narration voice</label>
+              <select id="nsdr-voice" value={nsdrVoice} onChange={e => updateSettings({ nsdrVoice: e.target.value })} style={{
                 width: '100%', padding: '10px 12px', borderRadius: 8,
                 background: '#0d0d14', border: '1px solid #252530',
                 color: '#ccc', fontSize: 13, fontFamily: "'DM Sans', sans-serif",
@@ -216,7 +209,7 @@ export default function NsdrProtocol() {
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
               }}>
-                {voices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>)}
+                {premiumVoices.map(v => <option key={v.id} value={v.id}>{v.name}{v.desc ? ` — ${v.desc}` : ''}</option>)}
               </select>
               <button onClick={previewVoice} style={{
                 marginTop: 8, padding: '6px 14px', borderRadius: 6,

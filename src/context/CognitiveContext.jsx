@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { DEFAULT_NSDR_VOICE, DEFAULT_NBACK_VOICE } from '../lib/voiceContent';
 
 const CognitiveContext = createContext(null);
 
@@ -25,6 +26,8 @@ const CognitiveContext = createContext(null);
  * @typedef {Object} Settings
  * @property {number} volume
  * @property {boolean} haptics
+ * @property {string} [nsdrVoice]   ElevenLabs voice id for NSDR narration
+ * @property {string} [nbackVoice]  ElevenLabs voice id for N-Back letters
  */
 
 /**
@@ -112,6 +115,8 @@ export const defaultState = {
   settings: {
     volume: 0.7,
     haptics: true,
+    nsdrVoice: DEFAULT_NSDR_VOICE,
+    nbackVoice: DEFAULT_NBACK_VOICE,
   },
   activeSession: null, // Current running session { module, startedAt }
 };

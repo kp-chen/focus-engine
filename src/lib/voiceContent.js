@@ -44,3 +44,25 @@ export const NBACK_LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T'];
 export function nsdrSegmentKey(index) {
   return index < BODY_SCAN_SCRIPT.length ? String(index) : 'filler';
 }
+
+// Curated ElevenLabs voices offered in the in-app pickers (ids from KP's
+// morning-brief roster). gen-voices.mjs renders each; the app shows the rendered
+// set from public/voices/manifest.json. Add/remove here, then `npm run voices`.
+export const VOICE_OPTIONS = [
+  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', desc: 'Velvety, soft' },
+  { id: 'hpp4J3VqNfWAUOO0d1Us', name: 'Bella', desc: 'Warm, bright' },
+  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', desc: 'Calm, professional' },
+  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', desc: 'Clear educator' },
+  // Add more (e.g. a male narrator) once the ElevenLabs key quota allows — each
+  // voice is ~3k credits. Then `npm run voices -- --voices <name>`.
+  // { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', desc: 'Steady broadcaster' },
+];
+
+// Default selections (must be ids present in VOICE_OPTIONS / the manifest).
+export const DEFAULT_NSDR_VOICE = 'pFZP5JQG7iQjIQuC4Bku';  // Lily
+export const DEFAULT_NBACK_VOICE = 'Xb7hH8MSUJpSbSDYk0k2'; // Alice
+
+// ElevenLabs `speed` voice-setting (0.7–1.2; <1 = slower/calmer). The NSDR body
+// scan is rendered slower for a relaxing cadence; N-Back letters stay crisp.
+export const NSDR_SPEED = 0.8;
+export const LETTER_SPEED = 1.0;

@@ -1,8 +1,8 @@
 // Premium voice playback. Plays pre-rendered ElevenLabs MP3s (committed under
 // public/voices/, see scripts/gen-voices.mjs) through the shared AudioContext,
 // and transparently falls back to the browser's SpeechSynthesis when the assets
-// are absent or fail to load. The pre-rendered audio is precached by the PWA, so
-// the premium voice also works offline.
+// are absent or fail to load. Multiple voices are rendered; the caller passes the
+// selected voiceId. The PWA runtime-caches each voice on first use for offline.
 
 import { getAudioContext } from './audioContext';
 
@@ -17,6 +17,12 @@ export function loadVoiceManifest() {
       .catch(() => null);
   }
   return manifestPromise;
+}
+
+// The pre-rendered voices available for the in-app pickers ([] when none built).
+export async function getVoices() {
+  const m = await loadVoiceManifest();
+  return m?.voices || [];
 }
 
 function getBuffer(url) {
@@ -51,7 +57,7 @@ function playBuffer(buffer, volume, track) {
   });
 }
 
-// Stop any in-flight pre-rendered NSDR voice (called on session stop/abort).
+// Stop any in-flight pre-rendered NSDR voice (called on session stop/abort/preview).
 export function stopCurrentVoice() {
   if (currentSource) {
     try { currentSource.stop(); } catch { /* already stopped */ }
@@ -60,13 +66,12 @@ export function stopCurrentVoice() {
 }
 
 /**
- * Speak one NSDR segment. Plays the pre-rendered MP3 for `key` if available,
- * otherwise calls `fallback(text, voiceVol)` (SpeechSynthesis). Resolves when the
- * segment finishes so the caller can then pause.
+ * Speak one NSDR segment in `voiceId`. Plays the pre-rendered MP3 if available,
+ * else calls `fallback(text, voiceVol)` (SpeechSynthesis). Resolves when done.
  */
-export async function playNsdrSegment(key, text, voiceVol, fallback) {
-  const manifest = await loadVoiceManifest();
-  const file = manifest?.nsdr?.[key];
+export async function playNsdrSegment(voiceId, key, text, voiceVol, fallback) {
+  const m = await loadVoiceManifest();
+  const file = m?.nsdr?.[voiceId]?.[key];
   if (file) {
     try {
       const buf = await getBuffer(file);
@@ -78,12 +83,12 @@ export async function playNsdrSegment(key, text, voiceVol, fallback) {
 }
 
 /**
- * Speak one N-Back letter. Plays the pre-rendered MP3 if available (fire and
- * forget, for low latency), otherwise calls `fallback(letter)`.
+ * Speak one N-Back letter in `voiceId` (fire-and-forget, low latency), else
+ * `fallback(letter)`.
  */
-export async function speakLetterPremium(letter, fallback) {
-  const manifest = await loadVoiceManifest();
-  const file = manifest?.letters?.[letter];
+export async function speakLetterPremium(voiceId, letter, fallback) {
+  const m = await loadVoiceManifest();
+  const file = m?.letters?.[voiceId]?.[letter];
   if (file) {
     try {
       const buf = await getBuffer(file);
@@ -94,10 +99,25 @@ export async function speakLetterPremium(letter, fallback) {
   fallback(letter);
 }
 
-// Warm the manifest + decode the letter buffers ahead of gameplay so the first
-// trial has no decode latency. Safe no-op when there are no pre-rendered voices.
-export async function preloadLetters() {
-  const manifest = await loadVoiceManifest();
-  if (!manifest?.letters) return;
-  await Promise.all(Object.values(manifest.letters).map(f => getBuffer(f).catch(() => {})));
+// Warm a voice's letter buffers ahead of gameplay (inside the start gesture).
+export async function preloadLetters(voiceId) {
+  const m = await loadVoiceManifest();
+  const map = m?.letters?.[voiceId];
+  if (!map) return;
+  await Promise.all(Object.values(map).map(f => getBuffer(f).catch(() => {})));
+}
+
+// Preview a voice for the picker: play its first body-scan line (or fallback).
+export async function previewNsdrVoice(voiceId, voiceVol, fallback) {
+  stopCurrentVoice();
+  const m = await loadVoiceManifest();
+  const file = m?.nsdr?.[voiceId]?.['0'];
+  if (file) {
+    try {
+      const buf = await getBuffer(file);
+      await playBuffer(buf, voiceVol, true);
+      return;
+    } catch { /* fall through */ }
+  }
+  if (fallback) fallback();
 }

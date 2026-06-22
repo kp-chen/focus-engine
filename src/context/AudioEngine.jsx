@@ -222,7 +222,7 @@ export function AudioEngineProvider({ children }) {
     // Stop any existing
     stopNsdrSession();
 
-    const { duration, ambientOn, ambientVol, voiceVol, voiceURI, onComplete } = config;
+    const { duration, ambientOn, ambientVol, voiceVol, nsdrVoiceId, onComplete } = config;
 
     if (ambientOn) startNsdr({ volume: ambientVol });
 
@@ -270,7 +270,7 @@ export function AudioEngineProvider({ children }) {
       // Premium ElevenLabs audio when present (base segments key by index, the
       // repeated filler shares 'filler'); SpeechSynthesis otherwise.
       const key = i < BODY_SCAN_SCRIPT.length ? String(i) : 'filler';
-      await playNsdrSegment(key, segments[i].text, voiceVol, (t, v) => speakText(t, v, voiceURI));
+      await playNsdrSegment(nsdrVoiceId, key, segments[i].text, voiceVol, (t, v) => speakText(t, v));
       if (narRef.abortFlag) break;
       await new Promise(r => setTimeout(r, segments[i].pause * 1000 * scale));
     }
