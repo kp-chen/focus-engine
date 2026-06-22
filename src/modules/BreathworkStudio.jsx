@@ -470,6 +470,12 @@ export default function BreathworkStudio() {
             Read study →
           </a>
         </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+          A 2025 meta-analysis of pranayama RCTs found slow breathing eases symptom severity, while fast breathing carried more adverse events — so the slow patterns here are the safer default.{' '}
+          <a href="https://doi.org/10.3389/fpsyt.2025.1616996" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            Mütze et al. (2025) →
+          </a>
+        </div>
       </div>
     </div>
   );

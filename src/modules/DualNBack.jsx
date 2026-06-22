@@ -806,9 +806,15 @@ export default function DualNBack() {
           </span>
           <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
             <span style={{ color: COLOR, fontWeight: 600 }}>Evidence: </span>
-            Meta-analysis of 33 RCTs found medium transfer to untrained WM tasks and small but significant effects on fluid intelligence and cognitive control.
+            A meta-analysis of 33 n-back RCTs found the transfer is largely task-specific — effects on fluid intelligence and cognitive control were small. Train it to sharpen working memory, not as a guaranteed IQ boost.
             <a href="https://doi.org/10.3758/s13423-016-1217-0" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, marginLeft: 4, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
               Soveri et al. (2017) →
+            </a>
+          </div>
+          <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
+            A 2024 meta-analysis (n=7,765 adults) found cognitive training improves working memory, verbal memory, and executive function.{' '}
+            <a href="https://doi.org/10.1007/s11065-024-09649-z" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>
+              Zhu et al. (2024) →
             </a>
           </div>
         </div>

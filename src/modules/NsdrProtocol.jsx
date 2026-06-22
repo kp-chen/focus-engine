@@ -297,6 +297,12 @@ export default function NsdrProtocol() {
             <a href="https://pubmed.ncbi.nlm.nih.gov/11958969/" target="_blank" rel="noopener noreferrer"
               style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>Kjaer et al. (2002) →</a>
           </div>
+          <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11 }}>
+            Two 2025 systematic reviews now support Yoga Nidra — for sleep disorders{' '}
+            <a href="https://doi.org/10.1177/27683605251390728" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>(SR of RCTs, 2025) →</a>{' '}
+            and for stress, anxiety &amp; depression{' '}
+            <a href="https://doi.org/10.1111/nyas.70149" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>(SR + meta-analysis, 2025) →</a>.
+          </div>
         </div>
       )}
     </div>

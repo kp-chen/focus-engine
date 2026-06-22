@@ -272,6 +272,12 @@ export default function FocusEngine() {
             Garcia-Argibay et al. (2019) →
           </a>
         </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+          For noise textures, a meta-analysis found white/pink noise gives a modest task-performance benefit, mainly in those with attention difficulties.{' '}
+          <a href="https://doi.org/10.1016/j.jaac.2023.12.014" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
+            SR + meta-analysis (2024) →
+          </a>
+        </div>
       </div>
     </div>
   );
