@@ -42,6 +42,12 @@ function getBuffer(url) {
 function playBuffer(buffer, volume, track) {
   return new Promise((resolve) => {
     const ctx = getAudioContext();
+    // Only one tracked (NSDR) narration source may play at a time — stop any
+    // previous one first so a restart / voice change can never overlap two voices.
+    if (track && currentSource) {
+      try { currentSource.stop(); } catch { /* already stopped */ }
+      currentSource = null;
+    }
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     const g = ctx.createGain();

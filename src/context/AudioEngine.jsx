@@ -226,9 +226,13 @@ export function AudioEngineProvider({ children }) {
 
     if (ambientOn) startNsdr({ volume: ambientVol });
 
-    const narRef = nsdrNarrationRef.current;
-    narRef.active = true;
-    narRef.abortFlag = false;
+    // Fresh token object per session. stopNsdrSession() (called above) set the
+    // PREVIOUS session's token abortFlag=true; a previous narration loop still
+    // awaiting an inter-segment pause captured that old token, so it now exits
+    // instead of being silently re-enabled by resetting a shared flag. This is
+    // what caused two voices to overlap when you stopped, changed voice, restarted.
+    const narRef = { active: true, abortFlag: false };
+    nsdrNarrationRef.current = narRef;
     const startTime = Date.now();
 
     setNsdrNarration({ active: true, currentText: '', elapsed: 0, duration, progress: 0 });
