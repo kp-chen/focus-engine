@@ -15,6 +15,7 @@ const DualNBack = lazy(() => import('./modules/DualNBack'));
 const NsdrProtocol = lazy(() => import('./modules/NsdrProtocol'));
 const UltradianTimer = lazy(() => import('./modules/UltradianTimer'));
 const BilateralStimulation = lazy(() => import('./modules/BilateralStimulation'));
+const HrvBiofeedback = lazy(() => import('./modules/HrvBiofeedback'));
 
 function RouteFallback() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
                   <Route path="/nsdr" element={<NsdrProtocol />} />
                   <Route path="/timer" element={<UltradianTimer />} />
                   <Route path="/bilateral" element={<BilateralStimulation />} />
+                  <Route path="/hrv" element={<HrvBiofeedback />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>

@@ -218,6 +218,7 @@ export default function Dashboard() {
     { id: 'nsdr', label: 'NSDR Protocol', icon: '◡', path: '/nsdr' },
     { id: 'timer', label: 'Ultradian Timer', icon: '◷', path: '/timer' },
     { id: 'bilateral', label: 'Bilateral Stim', icon: '⇋', path: '/bilateral' },
+    { id: 'hrv', label: 'HRV Biofeedback', icon: '♡', path: '/hrv' },
   ];
 
   const todayTotal = modules.reduce((sum, m) => sum + getTodayTotal(m.id), 0);

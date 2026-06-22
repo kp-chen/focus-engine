@@ -28,6 +28,10 @@ const CognitiveContext = createContext(null);
  * @property {boolean} haptics
  * @property {string} [nsdrVoice]   ElevenLabs voice id for NSDR narration
  * @property {string} [nbackVoice]  ElevenLabs voice id for N-Back letters
+ * @property {number} [hrvRate]     HRV pacer breaths/min
+ * @property {number} [hrvRatio]    HRV inhale fraction of the cycle (0.4–0.5)
+ * @property {boolean} [hrvAudioCue] HRV breathing tone on/off
+ * @property {boolean} [hrvTapScore] HRV tap-along steadiness on/off
  */
 
 /**
@@ -105,6 +109,7 @@ export const defaultStreaks = {
   nsdr: { current: 0, best: 0, lastDate: null },
   timer: { current: 0, best: 0, lastDate: null },
   bilateral: { current: 0, best: 0, lastDate: null },
+  hrv: { current: 0, best: 0, lastDate: null },
 };
 
 // Initial state
@@ -117,6 +122,10 @@ export const defaultState = {
     haptics: true,
     nsdrVoice: DEFAULT_NSDR_VOICE,
     nbackVoice: DEFAULT_NBACK_VOICE,
+    hrvRate: 6.0,
+    hrvRatio: 0.4,
+    hrvAudioCue: true,
+    hrvTapScore: false,
   },
   activeSession: null, // Current running session { module, startedAt }
 };

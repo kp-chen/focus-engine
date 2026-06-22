@@ -17,6 +17,7 @@ export const MODULE_COLORS = {
   nsdr:       '#8060d0',
   timer:      '#e0a030',
   bilateral:  '#d4537e',
+  hrv:        '#30c0d0',
 };
 
 export const TABS = [
@@ -27,4 +28,5 @@ export const TABS = [
   { id: 'nsdr',       label: 'NSDR',    icon: '◡', path: '/nsdr' },
   { id: 'timer',      label: 'Timer',   icon: '◷', path: '/timer' },
   { id: 'bilateral',  label: 'BLS',     icon: '⇋', path: '/bilateral' },
+  { id: 'hrv',        label: 'HRV',     icon: '♡', path: '/hrv' },
 ];
