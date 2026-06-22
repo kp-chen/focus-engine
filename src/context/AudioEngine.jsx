@@ -1,5 +1,7 @@
 import { createContext, useContext, useRef, useCallback, useState, useEffect } from 'react';
 import { getAudioContext } from '../lib/audioContext';
+import { BODY_SCAN_SCRIPT, NSDR_FILLER } from '../lib/voiceContent';
+import { playNsdrSegment, stopCurrentVoice } from '../lib/voice';
 
 const AudioEngineContext = createContext(null);
 
@@ -143,30 +145,9 @@ function buildNsdrGraph(ctx, volume) {
   return { sources, output, master };
 }
 
-// NSDR body scan script
-const BODY_SCAN_SCRIPT = [
-  { text: "Find a comfortable position, lying down or reclined. Allow your eyes to close gently.", pause: 6 },
-  { text: "Take a deep breath in through your nose. And slowly exhale through your mouth.", pause: 8 },
-  { text: "Again, breathe in deeply. Feel your chest and belly expand. And exhale completely, releasing all tension.", pause: 8 },
-  { text: "Bring your awareness to the top of your head. Notice any sensations there. Simply observe without judgment.", pause: 7 },
-  { text: "Now move your attention to your forehead. Feel it soften and relax. Let go of any tension you find.", pause: 6 },
-  { text: "Allow the relaxation to flow down to your eyes. Feel the muscles around your eyes become heavy and still.", pause: 6 },
-  { text: "Bring your awareness to your jaw. Let it drop slightly, creating space between your teeth. Release all holding.", pause: 6 },
-  { text: "Now notice your neck and throat. Allow them to soften completely.", pause: 5 },
-  { text: "Move your attention to your shoulders. With each exhale, feel them drop further away from your ears.", pause: 7 },
-  { text: "Bring awareness to your right arm. From shoulder to elbow, elbow to wrist, wrist to fingertips. Feel it grow heavy.", pause: 8 },
-  { text: "Now your left arm. Shoulder, elbow, wrist, fingertips. Let it rest completely.", pause: 7 },
-  { text: "Bring your attention to your chest. Feel the gentle rise and fall of your breath. No need to change it.", pause: 7 },
-  { text: "Move awareness to your belly. Let it be soft. Release any holding or bracing.", pause: 6 },
-  { text: "Now notice your lower back. Let the surface beneath you fully support your weight.", pause: 6 },
-  { text: "Bring attention to your hips and pelvis. Allow them to feel heavy and grounded.", pause: 6 },
-  { text: "Move your awareness down your right leg. Thigh, knee, shin, ankle, foot. Let it completely relax.", pause: 7 },
-  { text: "And your left leg. Thigh, knee, shin, ankle, foot. Feel the weight of your body sinking down.", pause: 7 },
-  { text: "Now expand your awareness to your whole body at once. You are fully supported. Fully at rest.", pause: 8 },
-  { text: "Stay in this state of deep rest. Your body is restoring. Your mind is quiet.", pause: 10 },
-  { text: "When you are ready, begin to deepen your breath. Gently wiggle your fingers and toes.", pause: 8 },
-  { text: "Take a full, deep breath in. And open your eyes when you feel ready. Welcome back.", pause: 5 },
-];
+// The NSDR body-scan script lives in ../lib/voiceContent (shared with
+// scripts/gen-voices.mjs so the pre-rendered ElevenLabs audio never drifts from
+// the spoken text). pickVoice/speakText below are the SpeechSynthesis fallback.
 
 function pickVoice(voiceURI) {
   const voices = speechSynthesis.getVoices();
@@ -273,14 +254,11 @@ export function AudioEngineProvider({ children }) {
       setTimeout(r, 1000);
     });
 
-    // Build segments
+    // Build segments (base script, plus repeated filler for longer sessions).
     const segments = duration <= 600
       ? BODY_SCAN_SCRIPT
       : BODY_SCAN_SCRIPT.concat(
-          Array.from({ length: Math.floor((duration - 600) / 30) }, () => ({
-            text: "Continue to rest deeply. Let each breath carry you further into stillness.",
-            pause: 12,
-          }))
+          Array.from({ length: Math.floor((duration - 600) / 30) }, () => NSDR_FILLER)
         );
 
     const totalScriptTime = segments.reduce((s, seg) => s + seg.text.length * 0.06 + seg.pause, 0);
@@ -289,7 +267,10 @@ export function AudioEngineProvider({ children }) {
     for (let i = 0; i < segments.length; i++) {
       if (narRef.abortFlag) break;
       setNsdrNarration(prev => ({ ...prev, currentText: segments[i].text }));
-      await speakText(segments[i].text, voiceVol, voiceURI);
+      // Premium ElevenLabs audio when present (base segments key by index, the
+      // repeated filler shares 'filler'); SpeechSynthesis otherwise.
+      const key = i < BODY_SCAN_SCRIPT.length ? String(i) : 'filler';
+      await playNsdrSegment(key, segments[i].text, voiceVol, (t, v) => speakText(t, v, voiceURI));
       if (narRef.abortFlag) break;
       await new Promise(r => setTimeout(r, segments[i].pause * 1000 * scale));
     }
@@ -305,6 +286,7 @@ export function AudioEngineProvider({ children }) {
     nsdrNarrationRef.current.abortFlag = true;
     clearInterval(nsdrTimerRef.current);
     speechSynthesis.cancel();
+    stopCurrentVoice(); // stop any in-flight pre-rendered segment
     stopEngine('nsdr');
     setNsdrNarration({ active: false, currentText: '', elapsed: 0, duration: 0, progress: 0 });
   }, []);

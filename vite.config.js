@@ -31,8 +31,12 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache every built asset (JS/CSS/HTML/fonts/icons) for offline use.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        // Precache every built asset (JS/CSS/HTML/fonts/icons + the pre-rendered
+        // voice MP3s and their manifest) so the app — including premium NSDR/
+        // N-Back narration — runs fully offline.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,mp3,json}'],
+        // Voice audio can push the precache past the 2 MiB default cap.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // SPA: serve index.html for navigations when offline.
         navigateFallback: '/',
       },

@@ -1,0 +1,41 @@
+{
+  "generatedWith": {
+    "model": "eleven_multilingual_v2",
+    "nsdrVoice": "pFZP5JQG7iQjIQuC4Bku",
+    "letterVoice": "Xb7hH8MSUJpSbSDYk0k2"
+  },
+  "nsdr": {
+    "0": "/voices/nsdr/00.mp3",
+    "1": "/voices/nsdr/01.mp3",
+    "2": "/voices/nsdr/02.mp3",
+    "3": "/voices/nsdr/03.mp3",
+    "4": "/voices/nsdr/04.mp3",
+    "5": "/voices/nsdr/05.mp3",
+    "6": "/voices/nsdr/06.mp3",
+    "7": "/voices/nsdr/07.mp3",
+    "8": "/voices/nsdr/08.mp3",
+    "9": "/voices/nsdr/09.mp3",
+    "10": "/voices/nsdr/10.mp3",
+    "11": "/voices/nsdr/11.mp3",
+    "12": "/voices/nsdr/12.mp3",
+    "13": "/voices/nsdr/13.mp3",
+    "14": "/voices/nsdr/14.mp3",
+    "15": "/voices/nsdr/15.mp3",
+    "16": "/voices/nsdr/16.mp3",
+    "17": "/voices/nsdr/17.mp3",
+    "18": "/voices/nsdr/18.mp3",
+    "19": "/voices/nsdr/19.mp3",
+    "20": "/voices/nsdr/20.mp3",
+    "filler": "/voices/nsdr/filler.mp3"
+  },
+  "letters": {
+    "C": "/voices/letters/C.mp3",
+    "H": "/voices/letters/H.mp3",
+    "K": "/voices/letters/K.mp3",
+    "L": "/voices/letters/L.mp3",
+    "Q": "/voices/letters/Q.mp3",
+    "R": "/voices/letters/R.mp3",
+    "S": "/voices/letters/S.mp3",
+    "T": "/voices/letters/T.mp3"
+  }
+}

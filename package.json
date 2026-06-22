@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p jsconfig.json",
     "icons": "node scripts/gen-icons.mjs",
+    "voices": "node scripts/gen-voices.mjs",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
     "test": "vitest run",
     "test:watch": "vitest"

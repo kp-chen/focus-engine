@@ -1,21 +1,25 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
+import { NBACK_LETTERS } from '../lib/voiceContent';
+import { speakLetterPremium, preloadLetters } from '../lib/voice';
 import { MODULE_COLORS } from '../theme';
 
 const COLOR = MODULE_COLORS.nback;
 
-// Audio letters for auditory channel
-const LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T'];
+// Auditory channel letters (shared with the voice pre-render).
+const LETTERS = NBACK_LETTERS;
 
-// Speech synthesis for letters
+// Speak a letter: pre-rendered ElevenLabs audio when available, else SpeechSynthesis.
 function speakLetter(letter) {
-  try {
-    const u = new SpeechSynthesisUtterance(letter);
-    u.rate = 0.9;
-    u.pitch = 1.0;
-    u.volume = 0.8;
-    speechSynthesis.speak(u);
-  } catch {}
+  speakLetterPremium(letter, (l) => {
+    try {
+      const u = new SpeechSynthesisUtterance(l);
+      u.rate = 0.9;
+      u.pitch = 1.0;
+      u.volume = 0.8;
+      speechSynthesis.speak(u);
+    } catch {}
+  });
 }
 
 // Generate a sequence with controlled match rate (~30% matches for each channel)
@@ -489,6 +493,7 @@ export default function DualNBack() {
 
   const startGame = useCallback(() => {
     clearTimers();
+    preloadLetters(); // warm the pre-rendered letter audio (inside this gesture)
     const seq = generateSequence(trialCount + nLevel, nLevel);
     seqRef.current = seq;
     statsRef.current = {

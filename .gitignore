@@ -2,3 +2,9 @@ node_modules
 dist
 .vite
 .DS_Store
+
+# Secrets — the ElevenLabs key for scripts/gen-voices.mjs lives in a local .env,
+# never committed. The rendered MP3s under public/voices/ ARE committed.
+.env
+.env.*
+!.env.example
