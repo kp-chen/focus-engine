@@ -21,6 +21,21 @@
       "id": "Xb7hH8MSUJpSbSDYk0k2",
       "name": "Alice",
       "desc": "Clear educator"
+    },
+    {
+      "id": "onwK4e9ZLuTAKqWW03F9",
+      "name": "Daniel",
+      "desc": "Steady, male"
+    },
+    {
+      "id": "Aa6nEBJJMKJwJkCx8VU2",
+      "name": "Quentin",
+      "desc": "Warm narrator, male"
+    },
+    {
+      "id": "XfNU2rGpBa01ckF309OY",
+      "name": "Nichalia",
+      "desc": "Bright, friendly"
     }
   ],
   "nsdr": {
@@ -119,6 +134,78 @@
       "19": "/voices/alice/nsdr/19.mp3",
       "20": "/voices/alice/nsdr/20.mp3",
       "filler": "/voices/alice/nsdr/filler.mp3"
+    },
+    "onwK4e9ZLuTAKqWW03F9": {
+      "0": "/voices/daniel/nsdr/00.mp3",
+      "1": "/voices/daniel/nsdr/01.mp3",
+      "2": "/voices/daniel/nsdr/02.mp3",
+      "3": "/voices/daniel/nsdr/03.mp3",
+      "4": "/voices/daniel/nsdr/04.mp3",
+      "5": "/voices/daniel/nsdr/05.mp3",
+      "6": "/voices/daniel/nsdr/06.mp3",
+      "7": "/voices/daniel/nsdr/07.mp3",
+      "8": "/voices/daniel/nsdr/08.mp3",
+      "9": "/voices/daniel/nsdr/09.mp3",
+      "10": "/voices/daniel/nsdr/10.mp3",
+      "11": "/voices/daniel/nsdr/11.mp3",
+      "12": "/voices/daniel/nsdr/12.mp3",
+      "13": "/voices/daniel/nsdr/13.mp3",
+      "14": "/voices/daniel/nsdr/14.mp3",
+      "15": "/voices/daniel/nsdr/15.mp3",
+      "16": "/voices/daniel/nsdr/16.mp3",
+      "17": "/voices/daniel/nsdr/17.mp3",
+      "18": "/voices/daniel/nsdr/18.mp3",
+      "19": "/voices/daniel/nsdr/19.mp3",
+      "20": "/voices/daniel/nsdr/20.mp3",
+      "filler": "/voices/daniel/nsdr/filler.mp3"
+    },
+    "Aa6nEBJJMKJwJkCx8VU2": {
+      "0": "/voices/quentin/nsdr/00.mp3",
+      "1": "/voices/quentin/nsdr/01.mp3",
+      "2": "/voices/quentin/nsdr/02.mp3",
+      "3": "/voices/quentin/nsdr/03.mp3",
+      "4": "/voices/quentin/nsdr/04.mp3",
+      "5": "/voices/quentin/nsdr/05.mp3",
+      "6": "/voices/quentin/nsdr/06.mp3",
+      "7": "/voices/quentin/nsdr/07.mp3",
+      "8": "/voices/quentin/nsdr/08.mp3",
+      "9": "/voices/quentin/nsdr/09.mp3",
+      "10": "/voices/quentin/nsdr/10.mp3",
+      "11": "/voices/quentin/nsdr/11.mp3",
+      "12": "/voices/quentin/nsdr/12.mp3",
+      "13": "/voices/quentin/nsdr/13.mp3",
+      "14": "/voices/quentin/nsdr/14.mp3",
+      "15": "/voices/quentin/nsdr/15.mp3",
+      "16": "/voices/quentin/nsdr/16.mp3",
+      "17": "/voices/quentin/nsdr/17.mp3",
+      "18": "/voices/quentin/nsdr/18.mp3",
+      "19": "/voices/quentin/nsdr/19.mp3",
+      "20": "/voices/quentin/nsdr/20.mp3",
+      "filler": "/voices/quentin/nsdr/filler.mp3"
+    },
+    "XfNU2rGpBa01ckF309OY": {
+      "0": "/voices/nichalia/nsdr/00.mp3",
+      "1": "/voices/nichalia/nsdr/01.mp3",
+      "2": "/voices/nichalia/nsdr/02.mp3",
+      "3": "/voices/nichalia/nsdr/03.mp3",
+      "4": "/voices/nichalia/nsdr/04.mp3",
+      "5": "/voices/nichalia/nsdr/05.mp3",
+      "6": "/voices/nichalia/nsdr/06.mp3",
+      "7": "/voices/nichalia/nsdr/07.mp3",
+      "8": "/voices/nichalia/nsdr/08.mp3",
+      "9": "/voices/nichalia/nsdr/09.mp3",
+      "10": "/voices/nichalia/nsdr/10.mp3",
+      "11": "/voices/nichalia/nsdr/11.mp3",
+      "12": "/voices/nichalia/nsdr/12.mp3",
+      "13": "/voices/nichalia/nsdr/13.mp3",
+      "14": "/voices/nichalia/nsdr/14.mp3",
+      "15": "/voices/nichalia/nsdr/15.mp3",
+      "16": "/voices/nichalia/nsdr/16.mp3",
+      "17": "/voices/nichalia/nsdr/17.mp3",
+      "18": "/voices/nichalia/nsdr/18.mp3",
+      "19": "/voices/nichalia/nsdr/19.mp3",
+      "20": "/voices/nichalia/nsdr/20.mp3",
+      "filler": "/voices/nichalia/nsdr/filler.mp3"
     }
   },
   "letters": {
@@ -161,6 +248,36 @@
       "R": "/voices/alice/letters/R.mp3",
       "S": "/voices/alice/letters/S.mp3",
       "T": "/voices/alice/letters/T.mp3"
+    },
+    "onwK4e9ZLuTAKqWW03F9": {
+      "C": "/voices/daniel/letters/C.mp3",
+      "H": "/voices/daniel/letters/H.mp3",
+      "K": "/voices/daniel/letters/K.mp3",
+      "L": "/voices/daniel/letters/L.mp3",
+      "Q": "/voices/daniel/letters/Q.mp3",
+      "R": "/voices/daniel/letters/R.mp3",
+      "S": "/voices/daniel/letters/S.mp3",
+      "T": "/voices/daniel/letters/T.mp3"
+    },
+    "Aa6nEBJJMKJwJkCx8VU2": {
+      "C": "/voices/quentin/letters/C.mp3",
+      "H": "/voices/quentin/letters/H.mp3",
+      "K": "/voices/quentin/letters/K.mp3",
+      "L": "/voices/quentin/letters/L.mp3",
+      "Q": "/voices/quentin/letters/Q.mp3",
+      "R": "/voices/quentin/letters/R.mp3",
+      "S": "/voices/quentin/letters/S.mp3",
+      "T": "/voices/quentin/letters/T.mp3"
+    },
+    "XfNU2rGpBa01ckF309OY": {
+      "C": "/voices/nichalia/letters/C.mp3",
+      "H": "/voices/nichalia/letters/H.mp3",
+      "K": "/voices/nichalia/letters/K.mp3",
+      "L": "/voices/nichalia/letters/L.mp3",
+      "Q": "/voices/nichalia/letters/Q.mp3",
+      "R": "/voices/nichalia/letters/R.mp3",
+      "S": "/voices/nichalia/letters/S.mp3",
+      "T": "/voices/nichalia/letters/T.mp3"
     }
   }
 }

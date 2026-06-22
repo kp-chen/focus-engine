@@ -53,9 +53,10 @@ export const VOICE_OPTIONS = [
   { id: 'hpp4J3VqNfWAUOO0d1Us', name: 'Bella', desc: 'Warm, bright' },
   { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', desc: 'Calm, professional' },
   { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', desc: 'Clear educator' },
-  // Add more (e.g. a male narrator) once the ElevenLabs key quota allows — each
-  // voice is ~3k credits. Then `npm run voices -- --voices <name>`.
-  // { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', desc: 'Steady broadcaster' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', desc: 'Steady, male' },
+  { id: 'Aa6nEBJJMKJwJkCx8VU2', name: 'Quentin', desc: 'Warm narrator, male' },
+  { id: 'XfNU2rGpBa01ckF309OY', name: 'Nichalia', desc: 'Bright, friendly' },
+  // Add more here, then `npm run voices -- --voices <name>` (each ≈ 3k credits).
 ];
 
 // Default selections (must be ids present in VOICE_OPTIONS / the manifest).
