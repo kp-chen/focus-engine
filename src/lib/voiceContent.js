@@ -45,9 +45,9 @@ export function nsdrSegmentKey(index) {
   return index < BODY_SCAN_SCRIPT.length ? String(index) : 'filler';
 }
 
-// Curated ElevenLabs voices offered in the in-app pickers (ids from KP's
-// morning-brief roster). gen-voices.mjs renders each; the app shows the rendered
-// set from public/voices/manifest.json. Add/remove here, then `npm run voices`.
+// Curated ElevenLabs voices offered in the in-app pickers (ids from the
+// ElevenLabs voice library). gen-voices.mjs renders each; the app shows the
+// rendered set from public/voices/manifest.json. Add/remove here, then `npm run voices`.
 export const VOICE_OPTIONS = [
   { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', desc: 'Velvety, soft' },
   { id: 'hpp4J3VqNfWAUOO0d1Us', name: 'Bella', desc: 'Warm, bright' },
