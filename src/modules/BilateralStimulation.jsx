@@ -161,11 +161,23 @@ export default function BilateralStimulation() {
   const animRef = useRef(null);
   const startTimeRef = useRef(0);
   const activeRef = useRef(false);
+  // Live mirrors of the two values that change during a session. stopAll() is
+  // captured by the rAF / interval closures at click time (see start()), so
+  // reading `isActive`, `elapsed` or `cycleCount` from React state inside it
+  // would see their click-time values on the natural-completion path — the
+  // session was dropped entirely, and would have logged 0s / 0 cycles.
+  const elapsedRef = useRef(0);
+  const cyclesRef = useRef(0);
 
   const useAudio = mode.id === 'auditory' || mode.id === 'both';
   const useVisual = mode.id === 'visual' || mode.id === 'both';
 
   const stopAll = useCallback(() => {
+    // Snapshot the live session state from refs BEFORE tearing anything down.
+    const wasActive = activeRef.current;
+    const finalElapsed = elapsedRef.current;
+    const finalCycles = cyclesRef.current;
+
     activeRef.current = false;
     clearInterval(timerRef.current);
     cancelAnimationFrame(animRef.current);
@@ -178,14 +190,17 @@ export default function BilateralStimulation() {
       engineRef.current = null;
     }
 
-    if (isActive) {
-      endSession({ mode: mode.id, speed: speed.value, elapsed, cycles: cycleCount, tone: tone.label });
+    if (wasActive) {
+      endSession({ mode: mode.id, speed: speed.value, elapsed: finalElapsed, cycles: finalCycles, tone: tone.label });
     }
 
     setIsActive(false);
     setDotPosition(0);
     setPanSide('left');
-  }, [isActive, endSession, mode.id, speed.value, elapsed, cycleCount, tone.label]);
+    // Deliberately depends only on values that are fixed for a session. Keeping
+    // isActive/elapsed/cycleCount out means the closure the rAF and interval
+    // captured stays correct for the whole run.
+  }, [endSession, mode.id, speed.value, tone.label]);
 
   const start = useCallback(() => {
     stopAll();
@@ -193,7 +208,9 @@ export default function BilateralStimulation() {
     startTimeRef.current = Date.now();
     setIsActive(true);
     setElapsed(0);
+    elapsedRef.current = 0;
     setCycleCount(0);
+    cyclesRef.current = 0;
     startSession('bilateral');
 
     // Create audio engine if needed
@@ -218,7 +235,8 @@ export default function BilateralStimulation() {
         return;
       }
 
-      setElapsed(Math.floor(totalElapsed));
+      elapsedRef.current = Math.floor(totalElapsed);
+      setElapsed(elapsedRef.current);
 
       // Calculate position in cycle (0 → 1 → 0 → 1...)
       const cycleTime = speed.value; // seconds per full L→R sweep
@@ -229,6 +247,7 @@ export default function BilateralStimulation() {
       const newCycles = Math.floor(totalElapsed / cycleTime);
       if (newCycles > cycles) {
         cycles = newCycles;
+        cyclesRef.current = cycles;
         setCycleCount(cycles);
         // Haptic on each side change
         if (useVisual) haptic(10);
@@ -258,6 +277,7 @@ export default function BilateralStimulation() {
     // Elapsed timer
     timerRef.current = setInterval(() => {
       const el = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      elapsedRef.current = el;
       setElapsed(el);
       if (el >= duration) stopAll();
     }, 1000);
