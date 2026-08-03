@@ -1,8 +1,9 @@
 # Cognitive Toolkit (focus-engine)
 
 A client-only React PWA of audio-modulation and cognitive-training tools for
-focus, calm, and deep rest. All audio is synthesized live in the browser with
-the Web Audio API — there is no backend and no media to download. Sessions and
+focus, calm, and deep rest. Soundscapes are synthesized live in the browser
+with the Web Audio API; spoken narration plays from pre-rendered audio shipped
+with the app — there is no backend and no runtime API calls. Sessions and
 streaks persist locally via `localStorage`; data never leaves the device and can
 be exported as JSON.
 
@@ -26,7 +27,7 @@ Each module links the research it is based on.
 
 - **React** + **Vite** SPA, code-split per route
 - **Web Audio API** for all sound (procedural noise, oscillator graphs, convolution reverb, binaural beats)
-- **SpeechSynthesis** for NSDR narration
+- Pre-rendered **ElevenLabs** narration (MP3s committed under `public/voices/`) with a **SpeechSynthesis** fallback for NSDR and N-Back letters
 - `useReducer` + `localStorage` for a versioned local store
 - Self-hosted fonts (`@fontsource`), deployed on **Vercel**
 
@@ -41,8 +42,20 @@ npm run lint      # ESLint (flat config)
 npm test          # Vitest unit tests
 ```
 
+## Voice pre-rendering (optional)
+
+The narration MP3s under `public/voices/` are committed, so no API key is
+needed to run, build, or deploy the app. To re-render or add voices, copy
+`.env.example` to `.env`, set `ELEVENLABS_API_KEY`, and run `npm run voices`
+(see `scripts/gen-voices.mjs` for options). `.env` is gitignored — never
+commit a key.
+
 ## Notes
 
 - No personal data is collected or transmitted. State lives in `localStorage`
   under the key `cognitive_toolkit` and is migrated forward on load.
 - Audio requires a user gesture to start (browser autoplay policy).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

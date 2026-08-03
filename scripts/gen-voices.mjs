@@ -3,11 +3,11 @@
 // Renders each voice in VOICE_OPTIONS (src/lib/voiceContent.js): the NSDR body
 // scan + filler at a slow, relaxing cadence, and the Dual N-Back letters at
 // normal speed. Output goes to public/voices/<slug>/{nsdr,letters}/ plus a
-// manifest the app reads to populate the in-app voice pickers. Mirrors the
-// morning-brief video stack's ElevenLabs usage (xi-api-key, /v1/text-to-speech,
-// eleven_multilingual_v2), adding the `speed` voice-setting.
+// manifest the app reads to populate the in-app voice pickers. Uses the
+// ElevenLabs REST API (xi-api-key, /v1/text-to-speech, eleven_multilingual_v2)
+// with the `speed` voice-setting.
 //
-//   node scripts/gen-voices.mjs --env C:/Dev/morning-brief/video/.env
+//   node scripts/gen-voices.mjs                            # reads ./.env
 //   npm run voices -- --env <path>                       # render all VOICE_OPTIONS
 //   npm run voices -- --env <path> --voices Lily,Bella   # render/add a subset (merges)
 //   npm run voices -- --env <path> --force               # re-render existing files
@@ -64,8 +64,8 @@ function loadEnv(envPath) {
     }
     break; // first readable file wins
   }
-  // File values OVERRIDE process.env — a stale/empty ELEVENLABS_API_KEY in the
-  // environment (the billing-guard shadowing pattern) must not win over the .env.
+  // File values OVERRIDE process.env — a stale/empty ELEVENLABS_API_KEY
+  // inherited from the environment must not win over the .env.
   return { ...process.env, ...fileVals };
 }
 
@@ -102,7 +102,7 @@ async function main() {
   const KEY = env.ELEVENLABS_API_KEY;
   const MODEL = env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
   if (!KEY) {
-    console.error('ELEVENLABS_API_KEY not found. Pass --env <path to a .env> (e.g. the morning-brief video .env).');
+    console.error('ELEVENLABS_API_KEY not found. Copy .env.example to .env and fill in a key, or pass --env <path to a .env>.');
     process.exit(1);
   }
 
