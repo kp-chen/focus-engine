@@ -1,6 +1,6 @@
 export const THEME = {
   bg: { primary: '#0a0a0f', secondary: '#111116', tertiary: '#161620', card: '#111116' },
-  text: { primary: '#e8e8ec', secondary: '#888', tertiary: '#555', hint: '#444' },
+  text: { primary: '#e8e8ec', secondary: '#888', tertiary: '#888', hint: '#888' },
   border: { default: '#1e1e26', hover: '#2a2a36' },
   radius: { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 },
   font: {

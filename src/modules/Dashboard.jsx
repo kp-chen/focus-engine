@@ -16,9 +16,9 @@ function StatCard({ label, value, sub, color }) {
       background: '#111116', border: '1px solid #1e1e26', borderRadius: 12,
       padding: '14px 16px', textAlign: 'left',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 700, color: color || '#e8e8ec', letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#555', marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: '#888', marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>{sub}</div>}
     </div>
   );
 }
@@ -38,13 +38,13 @@ function ModuleRow({ id, label, icon, streak, todayTime, color, onClick }) {
       }}>{icon}</div>
       <div style={{ flex: 1, textAlign: 'left' }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: '#e8e8ec' }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
+        <div style={{ fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
           {todayTime > 0 ? `${formatDuration(todayTime)} today` : 'Not started today'}
         </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color, lineHeight: 1 }}>{streak.current}</div>
-        <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>day streak</div>
+        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>day streak</div>
       </div>
       <div style={{ color: '#333', fontSize: 16 }}>›</div>
     </button>
@@ -122,9 +122,9 @@ function FlowCard({ preset, onStart }) {
         </div>
         <div style={{ flex: 1, textAlign: 'left' }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: '#e8e8ec' }}>{preset.label}</div>
-          <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{preset.desc}</div>
+          <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{preset.desc}</div>
         </div>
-        <div style={{ color: '#444', fontSize: 14, transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</div>
+        <div style={{ color: '#888', fontSize: 14, transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>›</div>
       </button>
 
       {expanded && (
@@ -148,7 +148,7 @@ function FlowCard({ preset, onStart }) {
                 </div>
                 <div style={{ padding: '0 0 12px' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc' }}>{step.label}</div>
-                  <div style={{ fontSize: 10, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>{step.duration}</div>
+                  <div style={{ fontSize: 10, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 1 }}>{step.duration}</div>
                 </div>
               </div>
             ))}
@@ -186,7 +186,7 @@ function WeeklyHeatmap({ sessions }) {
 
         return (
           <div key={d} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 9, color: isToday ? '#888' : '#444', marginBottom: 3, fontFamily: "'JetBrains Mono', monospace" }}>{d}</div>
+            <div style={{ fontSize: 9, color: isToday ? '#ccc' : '#888', marginBottom: 3, fontFamily: "'JetBrains Mono', monospace" }}>{d}</div>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
               background: count > 0
@@ -241,7 +241,7 @@ export default function Dashboard() {
           background: 'linear-gradient(135deg, #a088e0, #e8e8ec)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4,
         }}>Cognitive Toolkit</h1>
-        <p style={{ fontSize: 13, color: '#555', fontFamily: "'JetBrains Mono', monospace" }}>
+        <p style={{ fontSize: 13, color: '#888', fontFamily: "'JetBrains Mono', monospace" }}>
           Science-backed performance tools
         </p>
       </div>
@@ -258,13 +258,13 @@ export default function Dashboard() {
         background: '#111116', borderRadius: 14, padding: '14px 16px',
         border: '1px solid #1e1e26', marginBottom: 20,
       }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>This week</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>This week</div>
         <WeeklyHeatmap sessions={state.sessions} />
       </div>
 
       {/* Flow Sequences */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>
           Flow sequences
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -276,7 +276,7 @@ export default function Dashboard() {
 
       {/* Module list */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>
           Modules
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -293,7 +293,7 @@ export default function Dashboard() {
         <button onClick={exportData} style={{
           flex: 1, padding: '10px 16px', borderRadius: 10,
           background: '#111116', border: '1px solid #1e1e26',
-          color: '#666', fontSize: 12, fontWeight: 500,
+          color: '#888', fontSize: 12, fontWeight: 500,
           cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
         }}>Export JSON</button>
         <button onClick={() => {
@@ -309,7 +309,7 @@ export default function Dashboard() {
         }} style={{
           flex: 1, padding: '10px 16px', borderRadius: 10,
           background: '#111116', border: '1px solid #1e1e26',
-          color: '#666', fontSize: 12, fontWeight: 500,
+          color: '#888', fontSize: 12, fontWeight: 500,
           cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
         }}>Export CSV</button>
       </div>

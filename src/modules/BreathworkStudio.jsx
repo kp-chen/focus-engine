@@ -140,7 +140,7 @@ function BreathCircle({ phase, progress, action, color, isActive, reduced }) {
         <div style={{
           fontSize: 14,
           fontWeight: 600,
-          color: isActive ? '#e8e8ec' : '#555',
+          color: isActive ? '#e8e8ec' : '#888',
           letterSpacing: '0.05em',
           textTransform: 'uppercase',
         }}>
@@ -167,7 +167,7 @@ function PhaseIndicator({ phases, currentIndex, color }) {
           }} />
           <span style={{
             fontSize: 10,
-            color: i === currentIndex ? '#888' : '#444',
+            color: i === currentIndex ? '#ccc' : '#888',
             fontFamily: "'JetBrains Mono', monospace",
             transition: 'color 0.3s',
           }}>
@@ -325,7 +325,7 @@ export default function BreathworkStudio() {
         }}>
           Breathwork Studio
         </h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Guided breathing for autonomic regulation
         </p>
       </div>
@@ -350,12 +350,12 @@ export default function BreathworkStudio() {
                 </span>
                 <span style={{
                   fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                  color: patternId === p.id ? color : '#444',
+                  color: patternId === p.id ? color : '#888',
                 }}>
                   {p.phases.map(ph => ph.duration / 1000).join('-')}s
                 </span>
               </div>
-              <div style={{ fontSize: 12, color: '#555', marginTop: 4, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 12, color: '#888', marginTop: 4, lineHeight: 1.4 }}>
                 {p.desc}
               </div>
             </button>
@@ -367,7 +367,7 @@ export default function BreathworkStudio() {
       {!isActive && (
         <div style={{ marginBottom: 24 }}>
           <label style={{
-            fontSize: 11, fontWeight: 600, color: '#555',
+            fontSize: 11, fontWeight: 600, color: '#888',
             textTransform: 'uppercase', letterSpacing: '0.08em',
             display: 'block', marginBottom: 8,
           }}>
@@ -379,7 +379,7 @@ export default function BreathworkStudio() {
                 flex: 1, padding: '10px 8px', borderRadius: 10,
                 border: `1px solid ${targetDuration === d.value ? color + '50' : '#1e1e26'}`,
                 background: targetDuration === d.value ? color + '10' : '#111116',
-                color: targetDuration === d.value ? '#e8e8ec' : '#555',
+                color: targetDuration === d.value ? '#e8e8ec' : '#888',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
               }}>
@@ -418,19 +418,19 @@ export default function BreathworkStudio() {
           borderTop: '1px solid #1e1e26',
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
+            <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
             <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
               {formatTime(elapsed)}
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
+            <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
             <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: isActive ? color : '#888' }}>
               {formatTime(remaining)}
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Cycles</div>
+            <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Cycles</div>
             <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
               {cycleCount}
             </div>
@@ -468,9 +468,9 @@ export default function BreathworkStudio() {
       {/* Science card */}
       <div style={{
         background: '#111116', borderRadius: 12, padding: 16,
-        border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+        border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
       }}>
-        <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+        <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
         <span style={{ color: '#888' }}>{pattern.desc}.</span>{' '}
         {pattern.id === 'cyclic' && (
           <>Extended exhalation activates the parasympathetic nervous system via vagal efferents. The double inhale maximally inflates lung alveoli, optimising CO₂ offloading on the long exhale.</>
@@ -481,13 +481,13 @@ export default function BreathworkStudio() {
         {pattern.id === 'relaxing' && (
           <>The 1:1.75:2 ratio strongly biases the autonomic nervous system toward parasympathetic dominance. Extended exhalation lengthens the cardiac vagal response, reducing heart rate and promoting calm.</>
         )}
-        <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11, color: '#555' }}>
+        <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: '#0d0d14', fontSize: 11, color: '#888' }}>
           <span style={{ color: color, fontWeight: 600 }}>Evidence:</span>{' '}{pattern.science}{' '}
           <a href={pattern.url} target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
             Read study →
           </a>
         </div>
-        <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#888', fontStyle: 'italic' }}>
           A 2025 meta-analysis of pranayama RCTs found slow breathing eases symptom severity, while fast breathing carried more adverse events — so the slow patterns here are the safer default.{' '}
           <a href="https://doi.org/10.3389/fpsyt.2025.1616996" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
             Mütze et al. (2025) →

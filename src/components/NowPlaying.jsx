@@ -65,7 +65,7 @@ export default function NowPlaying() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {meta.icon} {meta.label}
                 </div>
-                <div style={{ fontSize: 10, color: '#555', fontFamily: "'JetBrains Mono', monospace" }}>
+                <div style={{ fontSize: 10, color: '#888', fontFamily: "'JetBrains Mono', monospace" }}>
                   {formatTime(elapsed)}
                 </div>
               </button>
@@ -76,7 +76,7 @@ export default function NowPlaying() {
               }} aria-label={`Stop ${meta.label}`} style={{
                 width: 28, height: 28, borderRadius: 8,
                 background: '#1a1a22', border: '1px solid #252530',
-                color: '#666', fontSize: 10, cursor: 'pointer',
+                color: '#888', fontSize: 10, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>▪</button>
             </div>

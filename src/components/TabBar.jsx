@@ -48,7 +48,7 @@ export default function TabBar() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: isActive ? color : '#555',
+                color: isActive ? color : '#888',
                 transition: 'color 0.2s',
                 fontFamily: "'DM Sans', sans-serif",
                 position: 'relative',

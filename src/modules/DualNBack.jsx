@@ -268,7 +268,7 @@ function ResponseButton({ label, sublabel, active, correct, wrong, onPress, disa
       }}
     >
       <div style={{ fontSize: 14, fontWeight: 600, color: active ? '#e8e8ec' : '#888' }}>{label}</div>
-      <div style={{ fontSize: 10, color: '#555', marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>{sublabel}</div>
+      <div style={{ fontSize: 10, color: '#888', marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>{sublabel}</div>
     </button>
   );
 }
@@ -297,22 +297,22 @@ function Results({ stats, nLevel, onRestart, onClose }) {
         marginBottom: 24,
       }}>
         <div style={{ background: '#0d0d14', borderRadius: 10, padding: 14 }}>
-          <div style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Position</div>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Position</div>
           <div style={{ fontSize: 24, fontWeight: 700, color: COLOR }}>{posAccuracy}%</div>
-          <div style={{ fontSize: 11, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
             {stats.posHits}h {stats.posMisses}m {stats.posFalseAlarms}fa
           </div>
         </div>
         <div style={{ background: '#0d0d14', borderRadius: 10, padding: 14 }}>
-          <div style={{ fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Audio</div>
+          <div style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Audio</div>
           <div style={{ fontSize: 24, fontWeight: 700, color: COLOR }}>{audAccuracy}%</div>
-          <div style={{ fontSize: 11, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
             {stats.audHits}h {stats.audMisses}m {stats.audFalseAlarms}fa
           </div>
         </div>
       </div>
 
-      <div style={{ fontSize: 12, color: '#666', marginBottom: 20, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12, color: '#888', marginBottom: 20, lineHeight: 1.6 }}>
         {overall >= 80 ? `Strong performance. Consider advancing to ${nLevel + 1}-back.` :
          overall >= 60 ? `Solid session. Keep training at ${nLevel}-back.` :
          `Keep practicing at ${nLevel}-back. Accuracy improves with consistent daily sessions.`}
@@ -559,7 +559,7 @@ export default function DualNBack() {
         }}>
           Dual N-Back
         </h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Working memory training · {nLevel}-back
         </p>
       </div>
@@ -569,7 +569,7 @@ export default function DualNBack() {
         <>
           {/* N-Level selector */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
               N-level
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -578,7 +578,7 @@ export default function DualNBack() {
                   flex: 1, padding: '12px 8px', borderRadius: 10,
                   border: `1px solid ${nLevel === n ? COLOR + '50' : '#1e1e26'}`,
                   background: nLevel === n ? COLOR + '10' : '#111116',
-                  color: nLevel === n ? '#e8e8ec' : '#555',
+                  color: nLevel === n ? '#e8e8ec' : '#888',
                   fontSize: 16, fontWeight: 700, cursor: 'pointer',
                   fontFamily: "'JetBrains Mono', monospace",
                 }}>
@@ -586,7 +586,7 @@ export default function DualNBack() {
                 </button>
               ))}
             </div>
-            <div style={{ fontSize: 11, color: '#555', marginTop: 6 }}>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
               {nLevel === 1 ? 'Beginner — match current with previous' :
                nLevel === 2 ? 'Standard — match current with 2 steps ago' :
                nLevel === 3 ? 'Advanced — match current with 3 steps ago' :
@@ -597,7 +597,7 @@ export default function DualNBack() {
 
           {/* Trial count */}
           <div style={{ marginBottom: 24 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
               Trials per session
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -606,7 +606,7 @@ export default function DualNBack() {
                   flex: 1, padding: '10px 8px', borderRadius: 10,
                   border: `1px solid ${trialCount === t.value ? COLOR + '50' : '#1e1e26'}`,
                   background: trialCount === t.value ? COLOR + '10' : '#111116',
-                  color: trialCount === t.value ? '#e8e8ec' : '#555',
+                  color: trialCount === t.value ? '#e8e8ec' : '#888',
                   fontSize: 14, fontWeight: 600, cursor: 'pointer',
                   fontFamily: "'DM Sans', sans-serif",
                 }}>
@@ -619,7 +619,7 @@ export default function DualNBack() {
           {/* Letter voice */}
           {premiumVoices.length > 0 && (
             <div style={{ marginBottom: 24 }}>
-              <label htmlFor="nback-voice" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+              <label htmlFor="nback-voice" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                 Letter voice
               </label>
               <select id="nback-voice" value={nbackVoice} onChange={e => updateSettings({ nbackVoice: e.target.value })} style={{
@@ -641,17 +641,17 @@ export default function DualNBack() {
             border: '1px solid #1e1e26', marginBottom: 20,
           }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#888', marginBottom: 10 }}>How to play</div>
-            <div style={{ fontSize: 12, color: '#666', lineHeight: 1.7 }}>
+            <div style={{ fontSize: 12, color: '#888', lineHeight: 1.7 }}>
               Each trial shows a position on a 3×3 grid and plays a letter. Your task: identify when the current stimulus matches the one from <span style={{ color: COLOR, fontWeight: 600 }}>{nLevel} steps ago</span>.
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
               <div style={{ flex: 1, padding: '10px 12px', borderRadius: 8, background: '#0d0d14' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#888' }}>Position match</div>
-                <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Tap left button or press <span style={{ color: COLOR, fontFamily: "'JetBrains Mono', monospace" }}>A</span></div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Tap left button or press <span style={{ color: COLOR, fontFamily: "'JetBrains Mono', monospace" }}>A</span></div>
               </div>
               <div style={{ flex: 1, padding: '10px 12px', borderRadius: 8, background: '#0d0d14' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#888' }}>Audio match</div>
-                <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Tap right button or press <span style={{ color: COLOR, fontFamily: "'JetBrains Mono', monospace" }}>L</span></div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Tap right button or press <span style={{ color: COLOR, fontFamily: "'JetBrains Mono', monospace" }}>L</span></div>
               </div>
             </div>
           </div>
@@ -690,10 +690,10 @@ export default function DualNBack() {
           {/* Progress bar */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#555', fontFamily: "'JetBrains Mono', monospace" }}>
+              <span style={{ fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace" }}>
                 Trial {Math.min(currentTrial + 1, totalTrials)}/{totalTrials}
               </span>
-              <span style={{ fontSize: 11, color: '#555', fontFamily: "'JetBrains Mono', monospace" }}>
+              <span style={{ fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace" }}>
                 {nLevel}-back
               </span>
             </div>
@@ -730,7 +730,7 @@ export default function DualNBack() {
             {currentTrial < nLevel && (
               <div style={{
                 textAlign: 'center', marginTop: 16,
-                fontSize: 11, color: '#555', fontStyle: 'italic',
+                fontSize: 11, color: '#888', fontStyle: 'italic',
               }}>
                 Memorise — matching starts in {nLevel - currentTrial} trial{nLevel - currentTrial > 1 ? 's' : ''}
               </div>
@@ -771,7 +771,7 @@ export default function DualNBack() {
           <button onClick={finishGame} style={{
             width: '100%', padding: '10px', borderRadius: 10,
             background: 'none', border: '1px solid #252530',
-            color: '#555', fontSize: 12, cursor: 'pointer',
+            color: '#888', fontSize: 12, cursor: 'pointer',
             fontFamily: "'DM Sans', sans-serif",
           }}>
             End Session
@@ -798,9 +798,9 @@ export default function DualNBack() {
       {gameState === 'setup' && (
         <div style={{
           background: '#111116', borderRadius: 12, padding: 16, marginTop: 20,
-          border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+          border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
         }}>
-          <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+          <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
           <span style={{ color: '#888' }}>
             The dual n-back task trains working memory updating — the ability to hold, monitor, and replace information in real time. It engages the dorsolateral prefrontal cortex and fronto-parietal attention networks.
           </span>

@@ -321,7 +321,7 @@ export default function BilateralStimulation() {
           background: `linear-gradient(135deg, ${COLOR}, #e8e8ec)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>Bilateral Stimulation</h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           EMDR-inspired alternating stimulation
         </p>
       </div>
@@ -331,7 +331,7 @@ export default function BilateralStimulation() {
         <>
           {/* Mode */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Mode</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Mode</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {MODES.map(m => (
                 <button key={m.id} onClick={() => setMode(m)}
@@ -341,8 +341,8 @@ export default function BilateralStimulation() {
                   background: mode.id === m.id ? COLOR + '10' : '#111116',
                   cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                 }}>
-                  <div style={{ fontSize: 18, marginBottom: 4, color: mode.id === m.id ? COLOR : '#555' }}>{m.icon}</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: mode.id === m.id ? '#e8e8ec' : '#666' }}>{m.label}</div>
+                  <div style={{ fontSize: 18, marginBottom: 4, color: mode.id === m.id ? COLOR : '#888' }}>{m.icon}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: mode.id === m.id ? '#e8e8ec' : '#888' }}>{m.label}</div>
                 </button>
               ))}
             </div>
@@ -350,7 +350,7 @@ export default function BilateralStimulation() {
 
           {/* Speed */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Speed</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Speed</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {SPEEDS.map(s => (
                 <button key={s.label} onClick={() => setSpeed(s)}
@@ -360,8 +360,8 @@ export default function BilateralStimulation() {
                   background: speed.label === s.label ? COLOR + '10' : '#111116',
                   cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: speed.label === s.label ? '#e8e8ec' : '#666' }}>{s.label}</div>
-                  <div style={{ fontSize: 10, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.bpm}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: speed.label === s.label ? '#e8e8ec' : '#888' }}>{s.label}</div>
+                  <div style={{ fontSize: 10, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.bpm}</div>
                 </button>
               ))}
             </div>
@@ -370,7 +370,7 @@ export default function BilateralStimulation() {
           {/* Tone (only if audio mode) */}
           {(mode.id === 'auditory' || mode.id === 'both') && (
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Tone</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Tone</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {TONES.map(t => (
                   <button key={t.label} onClick={() => setTone(t)}
@@ -378,7 +378,7 @@ export default function BilateralStimulation() {
                     flex: 1, padding: '10px 8px', borderRadius: 10,
                     border: `1px solid ${tone.label === t.label ? COLOR + '50' : '#1e1e26'}`,
                     background: tone.label === t.label ? COLOR + '10' : '#111116',
-                    color: tone.label === t.label ? '#e8e8ec' : '#555',
+                    color: tone.label === t.label ? '#e8e8ec' : '#888',
                     fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                   }}>{t.label} <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", opacity: 0.6 }}>{t.freq}Hz</span></button>
                 ))}
@@ -388,14 +388,14 @@ export default function BilateralStimulation() {
 
           {/* Duration */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {DURATIONS.map(d => (
                 <button key={d.value} onClick={() => setDuration(d.value)} style={{
                   flex: 1, padding: '10px 8px', borderRadius: 10,
                   border: `1px solid ${duration === d.value ? COLOR + '50' : '#1e1e26'}`,
                   background: duration === d.value ? COLOR + '10' : '#111116',
-                  color: duration === d.value ? '#e8e8ec' : '#555',
+                  color: duration === d.value ? '#e8e8ec' : '#888',
                   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                 }}>{d.label}</button>
               ))}
@@ -406,8 +406,8 @@ export default function BilateralStimulation() {
           {(mode.id === 'auditory' || mode.id === 'both') && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <label htmlFor="bls-volume" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
-                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(volume * 100)}%</span>
+                <label htmlFor="bls-volume" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(volume * 100)}%</span>
               </div>
               <input id="bls-volume" type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
                 style={{ width: '100%', accentColor: COLOR }} />
@@ -457,15 +457,15 @@ export default function BilateralStimulation() {
             marginTop: 20, padding: '16px 0', borderTop: '1px solid #1e1e26',
           }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{formatTime(elapsed)}</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: COLOR }}>{formatTime(remaining)}</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Cycles</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Cycles</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{cycleCount}</div>
             </div>
           </div>
@@ -474,7 +474,7 @@ export default function BilateralStimulation() {
           <div style={{
             textAlign: 'center', padding: '14px 16px', marginTop: 12,
             background: '#0d0d14', borderRadius: 10,
-            fontSize: 13, color: '#777', lineHeight: 1.5, fontStyle: 'italic',
+            fontSize: 13, color: '#888', lineHeight: 1.5, fontStyle: 'italic',
           }}>
             {useVisual && !reduced
               ? 'Follow the dot with your eyes while letting your mind process freely'
@@ -487,8 +487,8 @@ export default function BilateralStimulation() {
           {useAudio && (
             <div style={{ marginTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <label htmlFor="bls-volume-active" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
-                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(volume * 100)}%</span>
+                <label htmlFor="bls-volume-active" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(volume * 100)}%</span>
               </div>
               <input id="bls-volume-active" type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
                 style={{ width: '100%', accentColor: COLOR }} />
@@ -511,9 +511,9 @@ export default function BilateralStimulation() {
       {!isActive && (
         <div style={{
           background: '#111116', borderRadius: 12, padding: 16, marginTop: 20,
-          border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+          border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
         }}>
-          <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+          <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
           <span style={{ color: '#888' }}>
             Bilateral stimulation alternates sensory input between left and right hemispheres. In EMDR therapy, this is used alongside guided recall to help reprocess distressing memories. The standalone stimulation may help reduce physiological arousal and promote a calm, present state.
           </span>
@@ -525,7 +525,7 @@ export default function BilateralStimulation() {
               Lee & Cuijpers (2013) →
             </a>
           </div>
-          <div style={{ marginTop: 6, fontSize: 11, color: '#555', fontStyle: 'italic' }}>
+          <div style={{ marginTop: 6, fontSize: 11, color: '#888', fontStyle: 'italic' }}>
             Evidence for standalone bilateral stimulation, outside full EMDR therapy, remains limited.
           </div>
         </div>

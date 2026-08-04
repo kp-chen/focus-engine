@@ -85,7 +85,7 @@ function BreathCircle({ phase, progress, isActive, reduced }) {
         transition: isActive ? 'transform 0.15s ease-out' : 'transform 0.8s ease',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? '#e8e8ec' : '#555', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? '#e8e8ec' : '#888', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           {isActive ? (phase === 'inhale' ? 'Breathe in' : 'Breathe out') : 'Ready'}
         </div>
       </div>
@@ -102,7 +102,7 @@ function Toggle({ on, onClick, label, sublabel }) {
     }}>
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>{sublabel}</div>
+        <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{sublabel}</div>
       </div>
       <button onClick={onClick} role="switch" aria-checked={on} aria-label={label} style={{
         width: 44, height: 24, borderRadius: 12, border: 'none',
@@ -325,7 +325,7 @@ export default function HrvBiofeedback() {
           background: `linear-gradient(135deg, ${COLOR}, #e8e8ec)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>HRV Biofeedback</h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Resonance-frequency breathing pacer
         </p>
       </div>
@@ -333,22 +333,22 @@ export default function HrvBiofeedback() {
       {setupVisible && (
         <>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Breathing rate (breaths / min)</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Breathing rate (breaths / min)</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {RATE_PRESETS.map(r => (
                 <button key={r.value} onClick={() => updateSettings({ hrvRate: r.value })} aria-pressed={rate === r.value} style={{
                   flex: 1, padding: '12px 8px', borderRadius: 10, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                   border: `1px solid ${rate === r.value ? COLOR + '50' : '#1e1e26'}`,
                   background: rate === r.value ? COLOR + '10' : '#111116',
-                  color: rate === r.value ? '#e8e8ec' : '#666', fontSize: 15, fontWeight: 700,
+                  color: rate === r.value ? '#e8e8ec' : '#888', fontSize: 15, fontWeight: 700,
                 }}>{r.label}</button>
               ))}
             </div>
-            <div style={{ fontSize: 11, color: '#555', marginTop: 6 }}>~6 breaths/min (0.1 Hz) is the typical resonance rate. Pick what feels easiest to sustain.</div>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>~6 breaths/min (0.1 Hz) is the typical resonance rate. Pick what feels easiest to sustain.</div>
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Rhythm</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Rhythm</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {RATIOS.map(r => (
                 <button key={r.value} onClick={() => updateSettings({ hrvRatio: r.value })} aria-pressed={ratio === r.value} style={{
@@ -356,22 +356,22 @@ export default function HrvBiofeedback() {
                   border: `1px solid ${ratio === r.value ? COLOR + '50' : '#1e1e26'}`,
                   background: ratio === r.value ? COLOR + '10' : '#111116',
                 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: ratio === r.value ? '#e8e8ec' : '#666' }}>{r.label}</div>
-                  <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>{r.desc}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: ratio === r.value ? '#e8e8ec' : '#888' }}>{r.label}</div>
+                  <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{r.desc}</div>
                 </button>
               ))}
             </div>
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {DURATIONS.map(d => (
                 <button key={d.value} onClick={() => setTargetDuration(d.value)} aria-pressed={targetDuration === d.value} style={{
                   flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                   border: `1px solid ${targetDuration === d.value ? COLOR + '50' : '#1e1e26'}`,
                   background: targetDuration === d.value ? COLOR + '10' : '#111116',
-                  color: targetDuration === d.value ? '#e8e8ec' : '#555', fontSize: 13, fontWeight: 600,
+                  color: targetDuration === d.value ? '#e8e8ec' : '#888', fontSize: 13, fontWeight: 600,
                 }}>{d.label}</button>
               ))}
             </div>
@@ -397,15 +397,15 @@ export default function HrvBiofeedback() {
 
           <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: 24, padding: '12px 0', borderTop: '1px solid #1e1e26' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: COLOR }}>{formatTime(remaining)}</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Breaths</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Breaths</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{breaths}</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Rate</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Rate</div>
               <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{rate}</div>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function HrvBiofeedback() {
                   <div style={{ height: 6, borderRadius: 3, background: '#1a1a22', marginTop: 10, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${steadiness}%`, background: COLOR, borderRadius: 3, transition: 'width 0.3s' }} />
                   </div>
-                  <div style={{ fontSize: 11, color: '#666', marginTop: 6 }}>
+                  <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
                     Pacing steadiness {steadiness}% — reflects how steadily you followed the pacer, <strong>not</strong> a heart-rate measurement.
                   </div>
                 </>
@@ -435,7 +435,7 @@ export default function HrvBiofeedback() {
               color: '#888', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}>End Session</button>
           </div>
-          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: '#444', fontStyle: 'italic' }}>{DISCLAIMER}</div>
+          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: '#888', fontStyle: 'italic' }}>{DISCLAIMER}</div>
         </div>
       )}
 
@@ -447,16 +447,16 @@ export default function HrvBiofeedback() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: summary.steadiness !== null ? '1fr 1fr 1fr' : '1fr 1fr', gap: 8, marginBottom: 20 }}>
             <div style={{ background: '#0d0d14', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Time</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Time</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{formatTime(summary.actualDuration)}</div>
             </div>
             <div style={{ background: '#0d0d14', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Breaths</div>
+              <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Breaths</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{summary.breaths}</div>
             </div>
             {summary.steadiness !== null && (
               <div style={{ background: '#0d0d14', borderRadius: 10, padding: 14 }}>
-                <div style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Steadiness</div>
+                <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Steadiness</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{summary.steadiness}%</div>
               </div>
             )}
@@ -465,13 +465,13 @@ export default function HrvBiofeedback() {
             width: '100%', padding: '14px', borderRadius: 12, background: `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)`,
             border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
           }}>Done</button>
-          <div style={{ marginTop: 12, fontSize: 10, color: '#444', fontStyle: 'italic' }}>{DISCLAIMER}</div>
+          <div style={{ marginTop: 12, fontSize: 10, color: '#888', fontStyle: 'italic' }}>{DISCLAIMER}</div>
         </div>
       )}
 
       {setupVisible && (
-        <div style={{ background: '#111116', borderRadius: 12, padding: 16, marginTop: 20, border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6 }}>
-          <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+        <div style={{ background: '#111116', borderRadius: 12, padding: 16, marginTop: 20, border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
           <span style={{ color: '#888' }}>
             Breathing at your resonance frequency (~6 breaths/min) maximises heart-rate variability and parasympathetic (vagal) tone. This module guides that breathing; the slow, exhale-weighted pace is the active ingredient.
           </span>
@@ -484,7 +484,7 @@ export default function HrvBiofeedback() {
             Slow breathing raises HRV and parasympathetic tone.{' '}
             <a href="https://doi.org/10.3389/fnhum.2018.00353" target="_blank" rel="noopener noreferrer" style={{ color: COLOR, textDecoration: 'none', borderBottom: `1px solid ${COLOR}40` }}>Zaccaro et al. (2018) →</a>
           </div>
-          <div style={{ marginTop: 10, fontSize: 11, color: '#444', fontStyle: 'italic' }}>
+          <div style={{ marginTop: 10, fontSize: 11, color: '#888', fontStyle: 'italic' }}>
             This pacer guides resonance-frequency breathing. It does not measure your heart rate or HRV.
           </div>
         </div>

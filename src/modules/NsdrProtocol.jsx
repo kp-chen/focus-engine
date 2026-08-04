@@ -27,8 +27,8 @@ function VolumeSlider({ label, value, onChange, color }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <label htmlFor={inputId} style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</label>
-        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(value * 100)}%</span>
+        <label htmlFor={inputId} style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</label>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(value * 100)}%</span>
       </div>
       <input id={inputId} type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
         style={{ width: '100%', accentColor: color }} />
@@ -72,7 +72,7 @@ function RestCircle({ progress, isActive, reduced }) {
         transition: 'transform 0.5s ease-in-out',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#ccc' : '#555', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#ccc' : '#888', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           {isActive ? 'Resting' : 'Ready'}
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function NsdrProtocol() {
           background: `linear-gradient(135deg, ${COLOR}, #e8e8ec)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>NSDR Protocol</h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Non-sleep deep rest · guided body scan
         </p>
       </div>
@@ -155,14 +155,14 @@ export default function NsdrProtocol() {
       {!isActive && (
         <>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Duration</label>
             <div style={{ display: 'flex', gap: 8 }}>
               {DURATIONS.map(d => (
                 <button key={d.value} onClick={() => setDuration(d.value)} style={{
                   flex: 1, padding: '10px 8px', borderRadius: 10,
                   border: `1px solid ${duration === d.value ? COLOR + '50' : '#1e1e26'}`,
                   background: duration === d.value ? COLOR + '10' : '#111116',
-                  color: duration === d.value ? '#e8e8ec' : '#555',
+                  color: duration === d.value ? '#e8e8ec' : '#888',
                   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                 }}>{d.label}</button>
               ))}
@@ -176,7 +176,7 @@ export default function NsdrProtocol() {
           }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>Ambient soundscape</div>
-              <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>Gentle drone + brown noise backdrop</div>
+              <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Gentle drone + brown noise backdrop</div>
             </div>
             <button onClick={() => setAmbientOn(!ambientOn)}
               role="switch" aria-checked={ambientOn} aria-label="Ambient soundscape" style={{
@@ -204,7 +204,7 @@ export default function NsdrProtocol() {
               background: '#111116', borderRadius: 12, padding: 16,
               border: '1px solid #1e1e26', marginBottom: 20,
             }}>
-              <label htmlFor="nsdr-voice" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Narration voice</label>
+              <label htmlFor="nsdr-voice" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Narration voice</label>
               <select id="nsdr-voice" value={nsdrVoice} onChange={e => updateSettings({ nsdrVoice: e.target.value })} style={{
                 width: '100%', padding: '10px 12px', borderRadius: 8,
                 background: '#0d0d14', border: '1px solid #252530',
@@ -245,11 +245,11 @@ export default function NsdrProtocol() {
           marginTop: 20, padding: '12px 0', borderTop: '1px solid #1e1e26',
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
+            <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Elapsed</div>
             <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{formatTime(nsdrNarration.elapsed)}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
+            <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Remaining</div>
             <div style={{ fontSize: 18, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: isActive ? COLOR : '#888' }}>{formatTime(remaining)}</div>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function NsdrProtocol() {
           </button>
         </div>
         {isActive && (
-          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: '#444', fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: '#888', fontFamily: "'JetBrains Mono', monospace" }}>
             Voice + audio persist when you switch tabs
           </div>
         )}
@@ -284,9 +284,9 @@ export default function NsdrProtocol() {
       {!isActive && (
         <div style={{
           background: '#111116', borderRadius: 12, padding: 16,
-          border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+          border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
         }}>
-          <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+          <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
           <span style={{ color: '#888' }}>
             NSDR uses guided body scanning and breathing to shift brainwave activity from beta (alert) through alpha into theta (deep rest) without falling asleep. This activates parasympathetic recovery and has been shown to increase striatal dopamine.
           </span>

@@ -157,7 +157,7 @@ export default function FocusEngine() {
         }}>
           Focus Engine
         </h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           {mode.freq} Hz amplitude modulation · neural phase-locking
         </p>
       </div>
@@ -168,7 +168,7 @@ export default function FocusEngine() {
             flex: 1, padding: '12px 8px', borderRadius: 12,
             border: `1px solid ${mode.id === m.id ? color + '60' : '#1e1e26'}`,
             background: mode.id === m.id ? color + '10' : '#111116',
-            color: mode.id === m.id ? '#e8e8ec' : '#555',
+            color: mode.id === m.id ? '#e8e8ec' : '#888',
             cursor: 'pointer', fontSize: 13, fontWeight: 600,
             fontFamily: "'DM Sans', sans-serif",
           }}>
@@ -202,7 +202,7 @@ export default function FocusEngine() {
         </div>
         {playing && (
           <div style={{
-            textAlign: 'center', marginTop: 12, fontSize: 11, color: '#555',
+            textAlign: 'center', marginTop: 12, fontSize: 11, color: '#888',
             fontFamily: "'JetBrains Mono', monospace",
           }}>
             Audio persists when you switch tabs
@@ -211,7 +211,7 @@ export default function FocusEngine() {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
           Sound texture
         </label>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -220,7 +220,7 @@ export default function FocusEngine() {
               padding: '8px 16px', borderRadius: 8,
               border: `1px solid ${texture === t.id ? color + '50' : '#1e1e26'}`,
               background: texture === t.id ? color + '12' : '#111116',
-              color: texture === t.id ? '#ccc' : '#555',
+              color: texture === t.id ? '#ccc' : '#888',
               cursor: 'pointer', fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
             }}>
               {t.label}
@@ -232,7 +232,7 @@ export default function FocusEngine() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label htmlFor="focus-depth" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <label htmlFor="focus-depth" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Neural effect (AM depth)
             </label>
             <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
@@ -241,13 +241,13 @@ export default function FocusEngine() {
           </div>
           <input id="focus-depth" type="range" min="0" max="0.5" step="0.01" value={depth} onChange={e => setDepth(+e.target.value)}
             style={{ width: '100%', accentColor: color }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#444', marginTop: 2 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#888', marginTop: 2 }}>
             <span>Subtle</span><span>Strong</span>
           </div>
         </div>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label htmlFor="focus-volume" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
+            <label htmlFor="focus-volume" style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
             <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(volume * 100)}%</span>
           </div>
           <input id="focus-volume" type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolumeState(+e.target.value)}
@@ -257,24 +257,24 @@ export default function FocusEngine() {
 
       <div style={{
         background: '#111116', borderRadius: 12, padding: 16,
-        border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+        border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
       }}>
-        <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+        <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
         <span style={{ color: '#888' }}>{mode.desc}.</span>{' '}
         Sound is modulated at{' '}
         <span style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>{mode.freq} Hz</span>{' '}
         with {Math.round(depth * 100)}% depth, driving neural phase-locking in attentional brain networks.
-        Based on Woods et al. (2024), <em style={{ color: '#666' }}>Commun Biol</em>.{' '}
+        Based on Woods et al. (2024), <em style={{ color: '#888' }}>Commun Biol</em>.{' '}
         <a href="https://www.nature.com/articles/s42003-024-07026-3" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40`, fontSize: 11 }}>
           Read study →
         </a>
-        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#888' }}>
           For the binaural texture specifically, a meta-analysis found binaural beats have a medium effect (g=0.45) on cognition and anxiety.{' '}
           <a href="https://doi.org/10.1007/s00426-018-1066-8" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
             Garcia-Argibay et al. (2019) →
           </a>
         </div>
-        <div style={{ marginTop: 6, fontSize: 11, color: '#555' }}>
+        <div style={{ marginTop: 6, fontSize: 11, color: '#888' }}>
           For noise textures, a meta-analysis found white/pink noise gives a modest task-performance benefit, mainly in those with attention difficulties.{' '}
           <a href="https://doi.org/10.1016/j.jaac.2023.12.014" target="_blank" rel="noopener noreferrer" style={{ color, textDecoration: 'none', borderBottom: `1px solid ${color}40` }}>
             SR + meta-analysis (2024) →

@@ -99,7 +99,7 @@ function FocusRating({ onRate }) {
             width: 44, height: 44, borderRadius: 12,
             border: `1.5px solid ${selected === n ? COLOR + '60' : '#252530'}`,
             background: selected === n ? COLOR + '15' : '#1a1a22',
-            color: selected === n ? '#e8e8ec' : '#666',
+            color: selected === n ? '#e8e8ec' : '#888',
             fontSize: 16, fontWeight: 700, cursor: 'pointer',
             fontFamily: "'JetBrains Mono', monospace",
             transition: 'all 0.15s',
@@ -108,14 +108,14 @@ function FocusRating({ onRate }) {
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#444', padding: '0 4px', marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#888', padding: '0 4px', marginBottom: 14 }}>
         <span>Distracted</span><span>Deep flow</span>
       </div>
       <button onClick={() => onRate(selected || 3)} style={{
         width: '100%', padding: '12px', borderRadius: 12,
         background: selected ? `linear-gradient(135deg, ${COLOR}, ${COLOR}cc)` : '#1a1a22',
         border: selected ? 'none' : '1px solid #252530',
-        color: selected ? '#fff' : '#666', fontSize: 14, fontWeight: 600,
+        color: selected ? '#fff' : '#888', fontSize: 14, fontWeight: 600,
         cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
         boxShadow: selected ? `0 4px 16px ${COLOR}20` : 'none',
       }}>
@@ -224,7 +224,7 @@ export default function UltradianTimer() {
           background: `linear-gradient(135deg, ${COLOR}, #e8e8ec)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>Ultradian Timer</h1>
-        <p style={{ fontSize: 12, color: '#555', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#888', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
           Work/rest cycles aligned to natural rhythms
         </p>
       </div>
@@ -233,7 +233,7 @@ export default function UltradianTimer() {
       {phase === 'idle' && (
         <>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
               Cycle preset
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -247,7 +247,7 @@ export default function UltradianTimer() {
                   <div style={{ fontSize: 15, fontWeight: 700, color: preset.label === p.label ? '#e8e8ec' : '#888', fontFamily: "'JetBrains Mono', monospace" }}>
                     {p.label}
                   </div>
-                  <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>{p.desc}</div>
+                  <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{p.desc}</div>
                 </button>
               ))}
             </div>
@@ -273,15 +273,15 @@ export default function UltradianTimer() {
               display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20,
             }}>
               <div style={{ background: '#111116', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #1e1e26' }}>
-                <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Cycles</div>
+                <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Cycles</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{cycleCount}</div>
               </div>
               <div style={{ background: '#111116', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #1e1e26' }}>
-                <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Work time</div>
+                <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Work time</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{Math.round(totalWorkTime / 60)}m</div>
               </div>
               <div style={{ background: '#111116', borderRadius: 10, padding: 12, textAlign: 'center', border: '1px solid #1e1e26' }}>
-                <div style={{ fontSize: 10, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Avg focus</div>
+                <div style={{ fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Avg focus</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: COLOR }}>{avgRating}</div>
               </div>
             </div>
@@ -315,7 +315,7 @@ export default function UltradianTimer() {
           />
 
           <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <div style={{ fontSize: 13, color: '#666' }}>
+            <div style={{ fontSize: 13, color: '#888' }}>
               {phase === 'work'
                 ? `Focus block ${cycleCount + 1} · ${preset.work} min`
                 : `Rest · ${preset.rest} min`
@@ -327,7 +327,7 @@ export default function UltradianTimer() {
             <button onClick={stopTimer} aria-label="Stop timer" style={{
               padding: '10px 32px', borderRadius: 10,
               background: '#1a1a22', border: '1px solid #252530',
-              color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              color: '#888', fontSize: 13, fontWeight: 600, cursor: 'pointer',
               fontFamily: "'DM Sans', sans-serif",
             }}>
               Stop
@@ -345,9 +345,9 @@ export default function UltradianTimer() {
       {phase === 'idle' && (
         <div style={{
           background: '#111116', borderRadius: 12, padding: 16, marginTop: 20,
-          border: '1px solid #1e1e26', fontSize: 12, color: '#555', lineHeight: 1.6,
+          border: '1px solid #1e1e26', fontSize: 12, color: '#888', lineHeight: 1.6,
         }}>
-          <div style={{ fontWeight: 600, color: '#666', marginBottom: 6 }}>How it works</div>
+          <div style={{ fontWeight: 600, color: '#888', marginBottom: 6 }}>How it works</div>
           <span style={{ color: '#888' }}>
             Humans cycle through ~90-minute periods of higher and lower alertness (Basic Rest-Activity Cycle). Aligning work blocks with these ultradian rhythms, followed by deliberate rest, may sustain cognitive performance better than pushing through fatigue.
           </span>
