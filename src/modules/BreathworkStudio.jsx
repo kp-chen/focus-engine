@@ -75,11 +75,8 @@ function BreathCircle({ phase, progress, action, color, isActive, reduced }) {
   } else if (action === 'exhale') {
     scale = maxSize - (maxSize - baseSize) * progress;
   } else {
-    // hold — maintain current size with subtle pulse
-    scale = phase?.label === 'Hold' && phase === PATTERNS.box.phases[1]
-      ? maxSize + Math.sin(progress * Math.PI * 2) * 0.02
-      : (action === 'hold' ? (progress < 0.01 ? maxSize : baseSize + (maxSize - baseSize) * (1 - progress * 0.02)) : maxSize);
-    // Simplify: hold after inhale = big, hold after exhale = small
+    // hold: a subtle pulse around full size. The expand/contract phases carry
+    // the breathing guidance; the hold just holds with a gentle shimmer.
     scale = maxSize + Math.sin(progress * Math.PI * 4) * 0.015;
   }
 
