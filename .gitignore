@@ -8,3 +8,8 @@ dist
 .env
 .env.*
 !.env.example
+
+# Local-only OSS-readiness audit. It documents the pre-publication review and is
+# deliberately never published; ignoring it means a stray `git add -A` can't
+# commit it into what is now a public repo.
+OSS-AUDIT.md
