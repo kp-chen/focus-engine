@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { getAudioContext } from '../lib/audioContext';
+import { chime } from '../lib/chime';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { MODULE_COLORS } from '../theme';
 
@@ -21,23 +22,6 @@ function formatTime(totalSec) {
 
 function haptic(ms = 40) {
   try { navigator?.vibrate?.(ms); } catch {}
-}
-
-function chime() {
-  try {
-    const ctx = getAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 660;
-    gain.gain.value = 0.3;
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 1.5);
-    // The osc/gain nodes are GC'd once the note finishes; the shared context
-    // stays open (no per-chime context churn).
-  } catch {}
 }
 
 function CircleTimer({ progress, phase, color, timeStr, reduced }) {
