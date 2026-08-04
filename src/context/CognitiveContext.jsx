@@ -197,8 +197,11 @@ export function reducer(state, action) {
 }
 
 export function CognitiveProvider({ children }) {
-  const saved = loadState();
-  const [state, dispatch] = useReducer(reducer, saved || defaultState);
+  // Lazy initializer: loadState() runs once on mount, not on every provider
+  // render (it does a synchronous localStorage.getItem + JSON.parse of the whole
+  // store). useReducer ignores the init function after mount, so the result is
+  // no longer recomputed and discarded each render.
+  const [state, dispatch] = useReducer(reducer, null, () => loadState() || defaultState);
 
   // Persist on every state change
   useEffect(() => {
