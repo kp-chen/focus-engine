@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { useReducedMotion } from '../lib/useReducedMotion';
@@ -20,13 +20,17 @@ function formatTime(s) {
 }
 
 function VolumeSlider({ label, value, onChange, color }) {
+  // useId() gives each mounted slider a unique id, so the visible caption is
+  // programmatically associated with its input even though the component is
+  // reused for voice + ambient (setup and during-session) — 4 instances.
+  const inputId = useId();
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+        <label htmlFor={inputId} style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</label>
         <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(value * 100)}%</span>
       </div>
-      <input type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
+      <input id={inputId} type="range" min="0" max="1" step="0.05" value={value} onChange={e => onChange(+e.target.value)}
         style={{ width: '100%', accentColor: color }} />
     </div>
   );

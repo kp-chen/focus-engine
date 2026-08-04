@@ -406,10 +406,10 @@ export default function BilateralStimulation() {
           {(mode.id === 'auditory' || mode.id === 'both') && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</span>
+                <label htmlFor="bls-volume" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
                 <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(volume * 100)}%</span>
               </div>
-              <input type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
+              <input id="bls-volume" type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
                 style={{ width: '100%', accentColor: COLOR }} />
             </div>
           )}
@@ -487,10 +487,10 @@ export default function BilateralStimulation() {
           {useAudio && (
             <div style={{ marginTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</span>
+                <label htmlFor="bls-volume-active" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
                 <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#666' }}>{Math.round(volume * 100)}%</span>
               </div>
-              <input type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
+              <input id="bls-volume-active" type="range" min="0.05" max="0.6" step="0.05" value={volume} onChange={e => setVolume(+e.target.value)}
                 style={{ width: '100%', accentColor: COLOR }} />
             </div>
           )}

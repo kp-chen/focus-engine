@@ -232,14 +232,14 @@ export default function FocusEngine() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <label htmlFor="focus-depth" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Neural effect (AM depth)
             </label>
             <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>
               {Math.round(depth * 100)}%
             </span>
           </div>
-          <input type="range" min="0" max="0.5" step="0.01" value={depth} onChange={e => setDepth(+e.target.value)}
+          <input id="focus-depth" type="range" min="0" max="0.5" step="0.01" value={depth} onChange={e => setDepth(+e.target.value)}
             style={{ width: '100%', accentColor: color }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#444', marginTop: 2 }}>
             <span>Subtle</span><span>Strong</span>
@@ -247,10 +247,10 @@ export default function FocusEngine() {
         </div>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
+            <label htmlFor="focus-volume" style={{ fontSize: 11, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Volume</label>
             <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#888' }}>{Math.round(volume * 100)}%</span>
           </div>
-          <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolumeState(+e.target.value)}
+          <input id="focus-volume" type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolumeState(+e.target.value)}
             style={{ width: '100%', accentColor: color }} />
         </div>
       </div>
