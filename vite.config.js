@@ -40,6 +40,13 @@ export default defineConfig({
         navigateFallback: '/',
         runtimeCaching: [
           {
+            // CacheFirst with a long expiry is safe here because the manifest
+            // addresses each MP3 with its content hash (`…/00.mp3?v=1a2b3c4d`,
+            // see scripts/lib/voice-version.mjs). Re-rendering a voice changes
+            // the query, hence the cache key, so returning and offline users get
+            // the new audio instead of the old entry — while every unchanged file
+            // keeps its cached copy. The matcher tests `url.pathname`, which
+            // excludes the query, so versioned URLs still match this rule.
             urlPattern: ({ url }) => url.pathname.startsWith('/voices/') && url.pathname.endsWith('.mp3'),
             handler: 'CacheFirst',
             options: {

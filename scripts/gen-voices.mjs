@@ -19,6 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { versionedUrl } from './lib/voice-version.mjs';
 import {
   BODY_SCAN_SCRIPT, NSDR_FILLER, NBACK_LETTERS,
   VOICE_OPTIONS, NSDR_SPEED, LETTER_SPEED,
@@ -83,6 +84,7 @@ async function tts(key, model, voiceId, text, speed) {
   return Buffer.from(await r.arrayBuffer());
 }
 
+// See lib/voice-version.mjs for why the manifest URLs carry a content hash.
 async function render(key, model, voiceId, text, speed, file, force) {
   const abs = path.join(OUT, file);
   if (!force && fs.existsSync(abs)) {
@@ -149,17 +151,21 @@ async function main() {
     console.log(`\n${v.name} (${v.id}) -> ${slug}/  [NSDR speed ${args.nsdrSpeed}]`);
     manifest.nsdr[v.id] = {};
     manifest.letters[v.id] = {};
+    // URLs carry the file's content hash (see lib/voice-version.mjs): a
+    // re-rendered voice gets a new cache key, so the service worker's CacheFirst
+    // entry can't serve the old audio to returning users.
     for (let i = 0; i < BODY_SCAN_SCRIPT.length; i++) {
       const file = `${slug}/nsdr/${String(i).padStart(2, '0')}.mp3`;
       await render(KEY, MODEL, v.id, BODY_SCAN_SCRIPT[i].text, args.nsdrSpeed, file, args.force);
-      manifest.nsdr[v.id][String(i)] = `/voices/${file}`;
+      manifest.nsdr[v.id][String(i)] = versionedUrl(OUT, file);
     }
-    await render(KEY, MODEL, v.id, NSDR_FILLER.text, args.nsdrSpeed, `${slug}/nsdr/filler.mp3`, args.force);
-    manifest.nsdr[v.id].filler = `/voices/${slug}/nsdr/filler.mp3`;
+    const fillerFile = `${slug}/nsdr/filler.mp3`;
+    await render(KEY, MODEL, v.id, NSDR_FILLER.text, args.nsdrSpeed, fillerFile, args.force);
+    manifest.nsdr[v.id].filler = versionedUrl(OUT, fillerFile);
     for (const letter of NBACK_LETTERS) {
       const file = `${slug}/letters/${letter}.mp3`;
       await render(KEY, MODEL, v.id, letter, LETTER_SPEED, file, args.force);
-      manifest.letters[v.id][letter] = `/voices/${file}`;
+      manifest.letters[v.id][letter] = versionedUrl(OUT, file);
     }
     // Only now mark the voice available, and persist — a crash before here leaves
     // the prior (complete) voices intact in the manifest.
