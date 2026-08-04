@@ -13,7 +13,7 @@ Live: https://focus-engine-two.vercel.app
 
 | Route | Module | What it does |
 |---|---|---|
-| `/` | Dashboard | Streaks, recent sessions, settings, data export/clear |
+| `/` | Dashboard | Streaks, recent sessions, flow sequences, data export (JSON/CSV) |
 | `/focus` | Focus Engine | AM-modulated focus soundscapes (noise / warm pad / binaural) |
 | `/breathe` | Breathwork Studio | Guided breathing patterns (box, 4-7-8, …) with animation |
 | `/nback` | Dual N-Back | Working-memory training game |

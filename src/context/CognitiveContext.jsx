@@ -25,7 +25,6 @@ const CognitiveContext = createContext(null);
 /**
  * @typedef {Object} Settings
  * @property {number} volume
- * @property {boolean} haptics
  * @property {string} [nsdrVoice]   ElevenLabs voice id for NSDR narration
  * @property {string} [nbackVoice]  ElevenLabs voice id for N-Back letters
  * @property {number} [hrvRate]     HRV pacer breaths/min
@@ -123,7 +122,6 @@ export const defaultState = {
   streaks: { ...defaultStreaks },
   settings: {
     volume: 0.7,
-    haptics: true,
     nsdrVoice: DEFAULT_NSDR_VOICE,
     nbackVoice: DEFAULT_NBACK_VOICE,
     hrvRate: 6.0,
@@ -187,10 +185,6 @@ export function reducer(state, action) {
     }
     case 'UPDATE_SETTINGS': {
       return { ...state, settings: { ...state.settings, ...action.settings } };
-    }
-    case 'EXPORT_DATA': {
-      // Side-effect handled in provider
-      return state;
     }
     case 'CLEAR_DATA': {
       return { ...defaultState };

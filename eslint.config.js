@@ -40,8 +40,8 @@ export default [
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       // React Compiler diagnostics — surfaced as a backlog; this app doesn't run
-      // the compiler. (immutability also flags the use-before-declare ordering
-      // in the audio context that Phase 1 fixes by hand.)
+      // the compiler. (immutability also flags a use-before-declare ordering in
+      // the audio context module that is resolved manually in the source.)
       'react-hooks/immutability': 'warn',
       'react-hooks/preserve-manual-memoization': 'warn',
       'react-hooks/purity': 'warn',

@@ -86,7 +86,7 @@ describe('reducer — settings & data', () => {
   it('UPDATE_SETTINGS merges without dropping existing keys', () => {
     const s = reducer(defaultState, { type: 'UPDATE_SETTINGS', settings: { volume: 0.2 } });
     expect(s.settings.volume).toBe(0.2);
-    expect(s.settings.haptics).toBe(true); // preserved
+    expect(s.settings.hrvRate).toBe(6.0); // preserved
   });
 
   it('CLEAR_DATA returns a clean default state', () => {
@@ -116,7 +116,7 @@ describe('loadState — forward-compatible persistence (black-screen regression)
     // absence produced the "black screen" crash on the dashboard.
     expect(Object.keys(s.streaks).sort()).toEqual(Object.keys(defaultStreaks).sort());
     expect(s.settings.volume).toBe(0.5);
-    expect(s.settings.haptics).toBe(true); // default merged in
+    expect(s.settings.hrvRate).toBe(6.0); // default merged in
   });
 
   it('adds streaks for modules missing from an older payload', () => {
