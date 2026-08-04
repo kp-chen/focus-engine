@@ -102,15 +102,17 @@ export default function FocusEngine() {
   const color = MODULE_COLORS.focus;
   const timerRef = useRef(null);
 
+  // NOTE: play() deliberately does NOT start the elapsed interval. The `playing`
+  // effect below is the SOLE owner of the 1s timer — it creates the interval
+  // when the engine flips on and clears it (via its cleanup) when it flips off.
+  // Starting a second interval here orphaned the first: stop()/the effect cleanup
+  // only ever cleared timerRef.current (the newest), so each play/stop cycle left
+  // a permanently-ticking interval that forced a re-render every second forever.
   const play = useCallback(() => {
     startFocus({ texture, freq: mode.freq, depth, volume });
     startSession('focus');
     setElapsed(0);
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setElapsed(getElapsed('focus'));
-    }, 1000);
-  }, [texture, mode, depth, volume, startFocus, startSession, getElapsed]);
+  }, [texture, mode, depth, volume, startFocus, startSession]);
 
   const stop = useCallback(() => {
     stopEngine('focus');
