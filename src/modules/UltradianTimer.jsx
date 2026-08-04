@@ -201,7 +201,16 @@ export default function UltradianTimer() {
     setRemaining(0);
   }, [endSession]);
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  // Cleanup on unmount — including mid-session navigation away: record the
+  // partial work/rest block so it isn't lost and the dangling activeSession is
+  // cleared (mirrors HrvBiofeedback's unmount handler). Reads phaseRef (a ref) so
+  // the decision is correct at unmount time, not from a stale render closure.
+  useEffect(() => () => {
+    clearInterval(timerRef.current);
+    if (phaseRef.current === 'work' || phaseRef.current === 'rest') {
+      endSession({ phase: phaseRef.current, aborted: true });
+    }
+  }, [endSession]);
 
   const totalDuration = phase === 'work' ? preset.work * 60 : preset.rest * 60;
   const progress = totalDuration > 0 ? 1 - (remaining / totalDuration) : 0;

@@ -169,14 +169,22 @@ export default function BilateralStimulation() {
   const elapsedRef = useRef(0);
   const cyclesRef = useRef(0);
 
+  // Record the active session from refs (the source of truth), so the payload is
+  // identical whether recording is triggered by the rAF/interval completion path,
+  // the End Session button, or the unmount handler — all of which read live refs.
+  const recordSession = useCallback(() => {
+    endSession({ mode: mode.id, speed: speed.value, elapsed: elapsedRef.current, cycles: cyclesRef.current, tone: tone.label });
+  }, [endSession, mode.id, speed.value, tone.label]);
+  const recordSessionRef = useRef(recordSession);
+  useEffect(() => { recordSessionRef.current = recordSession; }, [recordSession]);
+
   const useAudio = mode.id === 'auditory' || mode.id === 'both';
   const useVisual = mode.id === 'visual' || mode.id === 'both';
 
   const stopAll = useCallback(() => {
-    // Snapshot the live session state from refs BEFORE tearing anything down.
+    // Snapshot whether a session is running BEFORE tearing anything down, then
+    // record from refs (recordSessionRef always points at the latest payload).
     const wasActive = activeRef.current;
-    const finalElapsed = elapsedRef.current;
-    const finalCycles = cyclesRef.current;
 
     activeRef.current = false;
     clearInterval(timerRef.current);
@@ -190,17 +198,14 @@ export default function BilateralStimulation() {
       engineRef.current = null;
     }
 
-    if (wasActive) {
-      endSession({ mode: mode.id, speed: speed.value, elapsed: finalElapsed, cycles: finalCycles, tone: tone.label });
-    }
+    if (wasActive) recordSessionRef.current();
 
     setIsActive(false);
     setDotPosition(0);
     setPanSide('left');
-    // Deliberately depends only on values that are fixed for a session. Keeping
-    // isActive/elapsed/cycleCount out means the closure the rAF and interval
-    // captured stays correct for the whole run.
-  }, [endSession, mode.id, speed.value, tone.label]);
+    // No state in the deps: it reads only refs + recordSessionRef, so the closure
+    // the rAF and interval capture at click time stays correct for the whole run.
+  }, []);
 
   const start = useCallback(() => {
     stopAll();
@@ -290,8 +295,11 @@ export default function BilateralStimulation() {
     }
   }, [volume]);
 
-  // Cleanup — stop the note and disconnect, but leave the shared context open.
+  // Cleanup on unmount — including mid-session navigation away: record the partial
+  // session so it isn't lost and the dangling activeSession is cleared (mirrors
+  // HrvBiofeedback's unmount handler). No setState here — the component is leaving.
   useEffect(() => () => {
+    const wasActive = activeRef.current;
     activeRef.current = false;
     clearInterval(timerRef.current);
     cancelAnimationFrame(animRef.current);
@@ -299,6 +307,7 @@ export default function BilateralStimulation() {
       try { engineRef.current.osc.stop(); } catch {}
       try { engineRef.current.envelope.disconnect(); } catch {}
     }
+    if (wasActive) recordSessionRef.current();
   }, []);
 
   const remaining = Math.max(0, duration - elapsed);

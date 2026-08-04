@@ -208,6 +208,23 @@ export default function BreathworkStudio() {
   const cycleRef = useRef(0);
   const activeRef = useRef(false);
 
+  // Record the active session from refs (the source of truth), so the payload is
+  // correct whether recording is triggered by the rAF loop, the Stop button, or
+  // the unmount path — none of which can rely on React state being current. The
+  // previous stopSession read `elapsed`/`isActive` from state, which the rAF
+  // closure captured at click time: a session that ran to completion (or was
+  // left by navigating away) was never recorded. Mirrors HrvBiofeedback.endActive.
+  const recordSession = useCallback(() => {
+    endSession({
+      pattern: patternId,
+      cycles: cycleRef.current,
+      targetDuration,
+      actualDuration: Math.round((Date.now() - sessionStartRef.current) / 1000),
+    });
+  }, [endSession, patternId, targetDuration]);
+  const recordSessionRef = useRef(recordSession);
+  useEffect(() => { recordSessionRef.current = recordSession; }, [recordSession]);
+
   const tick = useCallback(() => {
     if (!activeRef.current) return;
     const now = Date.now();
@@ -260,28 +277,28 @@ export default function BreathworkStudio() {
   }, [tick, startSession]);
 
   const stopSession = useCallback(() => {
+    if (!activeRef.current) return;
     activeRef.current = false;
     cancelAnimationFrame(rafRef.current);
-    if (isActive || activeRef.current) {
-      endSession({
-        pattern: patternId,
-        cycles: cycleRef.current,
-        targetDuration,
-        actualDuration: elapsed,
-      });
-    }
+    recordSessionRef.current();
     setIsActive(false);
-  }, [endSession, patternId, targetDuration, elapsed, isActive]);
+  }, []);
 
   const toggle = useCallback(() => {
     isActive ? stopSession() : startBreathing();
   }, [isActive, stopSession, startBreathing]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount — including mid-session navigation away: record the
+  // partial session so it isn't lost and the dangling activeSession is cleared
+  // (mirrors HrvBiofeedback's unmount handler). No setState here — the component
+  // is leaving, and the recording dispatches to the provider, not local state.
   useEffect(() => {
     return () => {
-      activeRef.current = false;
       cancelAnimationFrame(rafRef.current);
+      if (activeRef.current) {
+        activeRef.current = false;
+        recordSessionRef.current();
+      }
     };
   }, []);
 
