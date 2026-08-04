@@ -181,4 +181,26 @@ describe('loadState — forward-compatible persistence (black-screen regression)
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ activeSession: as }));
     expect(loadState().activeSession).toEqual(as);
   });
+
+  it('drops unknown top-level keys — only the known schema is kept (F11)', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sessions: [{ id: 'x', module: 'focus', startedAt: 1, duration: 0 }],
+      streaks: { focus: { current: 2, best: 3, lastDate: '2026-08-01' } },
+      settings: { volume: 0.5 },
+      activeSession: { module: 'focus', startedAt: 10 },
+      junkTopLevel: 'should be dropped',
+      anotherJunk: 42,
+    }));
+    const s = loadState();
+    // Known fields survive and stay normalized...
+    expect(s.sessions).toHaveLength(1);
+    expect(s.streaks.focus.current).toBe(2);
+    expect(s.settings.volume).toBe(0.5);
+    expect(s.activeSession.module).toBe('focus');
+    // ...but unknown top-level keys must not pass through onto state (and get
+    // re-saved), or the "unknown junk keys are dropped" contract is false.
+    expect(Object.keys(s).sort()).toEqual(
+      ['_v', 'activeSession', 'sessions', 'settings', 'streaks']
+    );
+  });
 });

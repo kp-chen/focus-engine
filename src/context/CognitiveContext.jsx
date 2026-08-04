@@ -60,8 +60,9 @@ export function loadState() {
     // corrupt — can never crash a newer build. This retires the "black screen"
     // class of bug entirely: not only must every module key exist, every value
     // the Dashboard reads (streak numbers, session shape, activeSession) must be
-    // well-formed. Unknown junk keys are dropped.
-    const streaks = {};
+    // well-formed. Unknown keys — at the top level and inside the streaks map —
+    // are dropped, so only the known schema is ever carried forward.
+    const streaks = /** @type {Record<string, Streak>} */ ({});
     for (const key of Object.keys(defaultStreaks)) {
       const sv = saved.streaks?.[key];
       streaks[key] = sv && typeof sv === 'object'
@@ -80,9 +81,12 @@ export function loadState() {
       && typeof as.startedAt === 'number' && typeof as.module === 'string'
       ? as
       : null;
+    // Drop ...saved from the spread so unknown top-level keys from an older or
+    // hand-edited payload can't survive onto state (and get re-saved).
+    // defaultState contributes only the known schema, so the per-field
+    // normalization above is the single source of truth.
     return {
       ...defaultState,
-      ...saved,
       sessions,
       streaks,
       settings: { ...defaultState.settings, ...(saved.settings || {}) },
