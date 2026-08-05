@@ -27,13 +27,23 @@ export async function getVoices() {
 
 function getBuffer(url) {
   if (!bufferCache.has(url)) {
-    bufferCache.set(url, (async () => {
+    const pending = (async () => {
       const ctx = getAudioContext();
       const res = await fetch(url);
       if (!res.ok) throw new Error(`voice fetch ${res.status}`);
       const arr = await res.arrayBuffer();
       return await ctx.decodeAudioData(arr);
-    })());
+    })();
+    // Cache the in-flight promise so concurrent callers share one fetch, but
+    // evict it if it rejects. Keeping a rejected promise here meant a single
+    // transient failure (an offline blip, a 5xx from the CDN) poisoned this URL
+    // for the whole page session: every later play replayed the cached rejection
+    // and silently dropped to SpeechSynthesis, even once the network recovered.
+    pending.catch(() => {
+      // Only evict our own entry — a later attempt may already have replaced it.
+      if (bufferCache.get(url) === pending) bufferCache.delete(url);
+    });
+    bufferCache.set(url, pending);
   }
   return bufferCache.get(url);
 }
