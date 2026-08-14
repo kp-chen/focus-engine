@@ -12,9 +12,31 @@ let currentSource = null;       // in-flight NSDR voice source, so abort can sto
 
 export function loadVoiceManifest() {
   if (!manifestPromise) {
-    manifestPromise = fetch('/voices/manifest.json')
-      .then(r => (r.ok ? r.json() : null))
-      .catch(() => null);
+    // Same cache-poisoning rule as getBuffer below, applied to the manifest.
+    // `.catch(() => null)` used to turn a network blip into a CACHED null, so one
+    // transient failure silently disabled premium voices for the whole page
+    // session: every later call replayed the memoised null and every module fell
+    // back to SpeechSynthesis, even once the network recovered.
+    //
+    // A 4xx is a real answer — the manifest was never built — so that null is
+    // memoised as before. A rejected fetch or a 5xx is the server failing to
+    // answer, which is not information, so the entry is evicted and the next
+    // caller retries.
+    //
+    // This never rejects, deliberately: getVoices() feeds `.then(setPremiumVoices)`
+    // in DualNBack and NsdrProtocol with no rejection handler, so throwing here
+    // would turn a missing manifest into an unhandled rejection and leave the
+    // picker empty forever instead of falling back cleanly.
+    const pending = (async () => {
+      try {
+        const r = await fetch('/voices/manifest.json');
+        if (r.ok) return await r.json();
+        if (r.status < 500) return null;          // definitive: no manifest built
+      } catch { /* network failure — not an answer */ }
+      if (manifestPromise === pending) manifestPromise = null;   // let the next call retry
+      return null;
+    })();
+    manifestPromise = pending;
   }
   return manifestPromise;
 }

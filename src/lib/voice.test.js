@@ -175,13 +175,50 @@ describe('1. loadVoiceManifest', () => {
     expect(fetchMock.mock.calls.filter(([u]) => u === MANIFEST_URL)).toHaveLength(1);
   });
 
-  it('memoises a failed manifest fetch too (one attempt, still null)', async () => {
+  it('does NOT memoise a network failure — the next call retries', async () => {
+    // This test used to assert the opposite ("memoises a failed manifest fetch
+    // too"), which described the code faithfully and was still wrong: one
+    // offline blip cached a null forever, so premium voices stayed dead for the
+    // whole page session even after the network came back. A failed fetch is not
+    // an answer, so it must not be cached.
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
     const voice = await loadVoice();
 
     expect(await voice.loadVoiceManifest()).toBeNull();
     expect(await voice.loadVoiceManifest()).toBeNull();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);       // retried, not replayed
+  });
+
+  it('recovers once the network comes back', async () => {
+    // The symptom that matters, end to end: fail once, then succeed, and the
+    // manifest must actually load rather than replaying the cached null.
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const voice = await loadVoice();
+    expect(await voice.loadVoiceManifest()).toBeNull();
+
+    fetchMock.mockResolvedValue(jsonResponse(MANIFEST));
+    expect(await voice.loadVoiceManifest()).toEqual(MANIFEST);
+  });
+
+  it('does NOT memoise a 5xx — the server failing is not an answer', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(MANIFEST, { ok: false, status: 503 }));
+    const voice = await loadVoice();
+
+    expect(await voice.loadVoiceManifest()).toBeNull();
+    expect(await voice.loadVoiceManifest()).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('DOES memoise a 404 — "no manifest was built" is a real answer', async () => {
+    // The negative control for the eviction: without this, "evict on failure"
+    // could silently become "never cache anything", refetching a known-absent
+    // manifest on every single call.
+    fetchMock.mockResolvedValue(jsonResponse(MANIFEST, { ok: false, status: 404 }));
+    const voice = await loadVoice();
+
+    expect(await voice.loadVoiceManifest()).toBeNull();
+    expect(await voice.loadVoiceManifest()).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);       // cached, correctly
   });
 });
 
