@@ -126,6 +126,7 @@ export default function FocusEngine() {
   useEffect(() => {
     if (playing) {
       setElapsed(getElapsed('focus'));
+      clearInterval(timerRef.current);
       timerRef.current = setInterval(() => setElapsed(getElapsed('focus')), 1000);
       return () => clearInterval(timerRef.current);
     }
