@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
-import { useAudioEngine } from '../context/AudioEngine';
 import { MODULE_COLORS } from '../theme';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +22,7 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
-function ModuleRow({ id, label, icon, streak, todayTime, color, onClick }) {
+function ModuleRow({ label, icon, streak, todayTime, color, onClick }) {
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12,
@@ -223,7 +222,7 @@ export default function Dashboard() {
 
   const todayTotal = modules.reduce((sum, m) => sum + getTodayTotal(m.id), 0);
   const bestStreak = Math.max(...Object.values(state.streaks).map(s => s.best), 0);
-  const weekCutoff = Date.now() - 7 * 86400000;
+  const [weekCutoff] = useState(() => Date.now() - 7 * 86400000);
   const weekSessions = state.sessions.filter(s => s.startedAt > weekCutoff);
 
   const handleFlowStart = (preset) => {

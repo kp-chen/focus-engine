@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useEffectEvent } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { useAudioEngine } from '../context/AudioEngine';
 import { useReducedMotion } from '../lib/useReducedMotion';
@@ -127,9 +127,13 @@ export default function FocusEngine() {
   // Sync elapsed if returning to tab with running engine
   useEffect(() => {
     if (playing) {
-      setElapsed(getElapsed('focus'));
-      timerRef.current = setInterval(() => setElapsed(getElapsed('focus')), 1000);
-      return () => clearInterval(timerRef.current);
+      const sync = () => setElapsed(getElapsed('focus'));
+      const initial = setTimeout(sync, 0);
+      timerRef.current = setInterval(sync, 1000);
+      return () => {
+        clearTimeout(initial);
+        clearInterval(timerRef.current);
+      };
     }
   }, [playing, getElapsed]);
 
@@ -138,11 +142,16 @@ export default function FocusEngine() {
     if (playing) setVolume('focus', volume);
   }, [volume, playing, setVolume]);
 
-  // Restart audio if params change while playing
-  useEffect(() => {
+  // Restart audio if params change while playing. `playing` and `volume` are
+  // read through an Effect Event so that changing them alone (volume has its
+  // own live-update path above) never rebuilds the audio graph.
+  const restartAudio = useEffectEvent((freq, texture, depth) => {
     if (playing) {
-      startFocus({ texture, freq: mode.freq, depth, volume });
+      startFocus({ texture, freq, depth, volume });
     }
+  });
+  useEffect(() => {
+    restartAudio(mode.freq, texture, depth);
   }, [mode, texture, depth]);
 
   useEffect(() => () => clearInterval(timerRef.current), []);

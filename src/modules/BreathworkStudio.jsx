@@ -222,7 +222,15 @@ export default function BreathworkStudio() {
   const recordSessionRef = useRef(recordSession);
   useEffect(() => { recordSessionRef.current = recordSession; }, [recordSession]);
 
-  const tick = useCallback(() => {
+  const stopSession = useCallback(() => {
+    if (!activeRef.current) return;
+    activeRef.current = false;
+    cancelAnimationFrame(rafRef.current);
+    recordSessionRef.current();
+    setIsActive(false);
+  }, []);
+
+  const tick = useCallback(function tickFrame() {
     if (!activeRef.current) return;
     const now = Date.now();
     const totalElapsed = (now - sessionStartRef.current) / 1000;
@@ -254,8 +262,8 @@ export default function BreathworkStudio() {
       haptic(nextIndex === 0 ? 60 : 20);
     }
 
-    rafRef.current = requestAnimationFrame(tick);
-  }, [patternId, targetDuration]);
+    rafRef.current = requestAnimationFrame(tickFrame);
+  }, [patternId, targetDuration, stopSession]);
 
   const startBreathing = useCallback(() => {
     activeRef.current = true;
@@ -272,14 +280,6 @@ export default function BreathworkStudio() {
     haptic(50);
     rafRef.current = requestAnimationFrame(tick);
   }, [tick, startSession]);
-
-  const stopSession = useCallback(() => {
-    if (!activeRef.current) return;
-    activeRef.current = false;
-    cancelAnimationFrame(rafRef.current);
-    recordSessionRef.current();
-    setIsActive(false);
-  }, []);
 
   const toggle = useCallback(() => {
     isActive ? stopSession() : startBreathing();
@@ -299,14 +299,15 @@ export default function BreathworkStudio() {
     };
   }, []);
 
-  // Reset state when pattern changes while not active
-  useEffect(() => {
-    if (!isActive) {
-      setCurrentPhaseIndex(0);
-      setPhaseProgress(0);
-      setCycleCount(0);
-      setElapsed(0);
-    }
+  // Reset progress state when a different pattern is selected (the selector
+  // only renders while inactive)
+  const selectPattern = useCallback((id) => {
+    if (id === patternId) return;
+    setPatternId(id);
+    setCurrentPhaseIndex(0);
+    setPhaseProgress(0);
+    setCycleCount(0);
+    setElapsed(0);
   }, [patternId]);
 
   const remaining = Math.max(0, targetDuration - elapsed);
@@ -331,7 +332,7 @@ export default function BreathworkStudio() {
       {!isActive && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
           {PATTERN_LIST.map(p => (
-            <button key={p.id} onClick={() => setPatternId(p.id)} style={{
+            <button key={p.id} onClick={() => selectPattern(p.id)} style={{
               padding: '12px 16px', borderRadius: 12, textAlign: 'left',
               border: `1px solid ${patternId === p.id ? color + '50' : '#1e1e26'}`,
               background: patternId === p.id ? color + '08' : '#111116',

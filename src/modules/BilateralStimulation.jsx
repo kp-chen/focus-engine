@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCognitive } from '../context/CognitiveContext';
 import { getAudioContext } from '../lib/audioContext';
 import { useReducedMotion } from '../lib/useReducedMotion';
-import { MODULE_COLORS } from '../theme';
 
 const COLOR = '#d4537e'; // pink from our palette — calming but distinct
 
