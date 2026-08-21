@@ -3,8 +3,6 @@ import { getAudioContext } from '../lib/audioContext';
 import { BODY_SCAN_SCRIPT, NSDR_FILLER } from '../lib/voiceContent';
 import { playNsdrSegment, stopCurrentVoice } from '../lib/voice';
 
-const AudioEngineContext = createContext(null);
-
 /**
  * @typedef {Object} FocusConfig
  * @property {'warmpad'|'rain'|'brown'|'binaural'|string} texture
@@ -176,6 +174,8 @@ function speakText(text, voiceVol, voiceURI) {
   });
 }
 
+const AudioEngineContext = createContext(null);
+
 export function AudioEngineProvider({ children }) {
   const enginesRef = useRef(/** @type {Record<string, EngineEntry>} */ ({}));
   const [activeEngines, setActiveEngines] = useState({});
@@ -199,6 +199,27 @@ export function AudioEngineProvider({ children }) {
     setActiveEngines({ ...uiState });
   }, []);
 
+  const stopEngine = useCallback((moduleId) => {
+    const engine = enginesRef.current[moduleId];
+    if (!engine) return;
+    engine.graph.sources.forEach(s => { try { s.stop(); } catch {} });
+    try { engine.graph.output.disconnect(); } catch {}
+    // The shared context is intentionally NOT closed — repeatedly closing and
+    // reopening AudioContexts hits the browser's hardware-context cap.
+    delete enginesRef.current[moduleId];
+    syncUI();
+  }, [syncUI]);
+
+  const stopNsdrSession = useCallback(() => {
+    nsdrNarrationRef.current.active = false;
+    nsdrNarrationRef.current.abortFlag = true;
+    clearInterval(nsdrTimerRef.current);
+    speechSynthesis.cancel();
+    stopCurrentVoice(); // stop any in-flight pre-rendered segment
+    stopEngine('nsdr');
+    setNsdrNarration({ active: false, currentText: '', elapsed: 0, duration: 0, progress: 0 });
+  }, [stopEngine]);
+
   const startFocus = useCallback((config) => {
     stopEngine('focus');
     const ctx = getAudioContext();
@@ -207,7 +228,7 @@ export function AudioEngineProvider({ children }) {
     enginesRef.current.focus = { ctx, graph, startedAt: Date.now(), config };
     syncUI();
     return graph.analyser;
-  }, [syncUI]);
+  }, [syncUI, stopEngine]);
 
   const startNsdr = useCallback((config) => {
     stopEngine('nsdr');
@@ -215,7 +236,7 @@ export function AudioEngineProvider({ children }) {
     const graph = buildNsdrGraph(ctx, config.volume ?? 0.4);
     enginesRef.current.nsdr = { ctx, graph, startedAt: Date.now(), config };
     syncUI();
-  }, [syncUI]);
+  }, [syncUI, stopEngine]);
 
   // Start the full NSDR narration session (ambient + voice) — persists across navigation
   const startNsdrSession = useCallback(async (config) => {
@@ -283,28 +304,7 @@ export function AudioEngineProvider({ children }) {
       stopNsdrSession();
       if (onComplete) onComplete();
     }
-  }, [startNsdr]);
-
-  const stopNsdrSession = useCallback(() => {
-    nsdrNarrationRef.current.active = false;
-    nsdrNarrationRef.current.abortFlag = true;
-    clearInterval(nsdrTimerRef.current);
-    speechSynthesis.cancel();
-    stopCurrentVoice(); // stop any in-flight pre-rendered segment
-    stopEngine('nsdr');
-    setNsdrNarration({ active: false, currentText: '', elapsed: 0, duration: 0, progress: 0 });
-  }, []);
-
-  const stopEngine = useCallback((moduleId) => {
-    const engine = enginesRef.current[moduleId];
-    if (!engine) return;
-    engine.graph.sources.forEach(s => { try { s.stop(); } catch {} });
-    try { engine.graph.output.disconnect(); } catch {}
-    // The shared context is intentionally NOT closed — repeatedly closing and
-    // reopening AudioContexts hits the browser's hardware-context cap.
-    delete enginesRef.current[moduleId];
-    syncUI();
-  }, [syncUI]);
+  }, [startNsdr, stopNsdrSession]);
 
   const stopAll = useCallback(() => {
     stopNsdrSession();
@@ -360,3 +360,4 @@ export function useAudioEngine() {
   if (!ctx) throw new Error('useAudioEngine must be used within AudioEngineProvider');
   return ctx;
 }
+

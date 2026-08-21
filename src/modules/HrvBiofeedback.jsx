@@ -218,7 +218,7 @@ export default function HrvBiofeedback() {
   const endActiveRef = useRef(null);
   useEffect(() => { endActiveRef.current = endActive; }, [endActive]);
 
-  const tick = useCallback(() => {
+  const tick = useCallback(function tickFrame() {
     if (!activeRef.current) return;
     const ctx = getAudioContext();
     const now = Date.now();
@@ -248,7 +248,7 @@ export default function HrvBiofeedback() {
       try { oscRef.current.frequency.setValueAtTime(freq, ctx.currentTime); } catch {}
     }
 
-    rafRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tickFrame);
   }, [stopSession]);
 
   const start = useCallback(() => {

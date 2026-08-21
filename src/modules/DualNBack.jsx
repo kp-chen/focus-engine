@@ -132,7 +132,6 @@ function Tutorial({ onDone }) {
   // Auto-animate sequence steps
   useEffect(() => {
     if (!hasSeq) return;
-    setSeqIndex(0);
     const iv = setInterval(() => {
       setSeqIndex(i => {
         const next = i + 1;
@@ -140,7 +139,7 @@ function Tutorial({ onDone }) {
       });
     }, 1500);
     return () => clearInterval(iv);
-  }, [step, hasSeq, s.sequence]);
+  }, [hasSeq, s.sequence]);
 
   const activePos = hasSeq ? s.sequence[seqIndex].pos : s.grid;
   const activeLetter = hasSeq ? s.sequence[seqIndex].letter : s.letter;
@@ -211,7 +210,7 @@ function Tutorial({ onDone }) {
       {/* Nav buttons */}
       <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
         {step > 0 && (
-          <button onClick={() => setStep(step - 1)} style={{
+          <button onClick={() => { setStep(step - 1); setSeqIndex(0); }} style={{
             flex: 1, padding: '12px', borderRadius: 10,
             background: '#1a1a22', border: '1px solid #252530',
             color: '#888', fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -219,7 +218,7 @@ function Tutorial({ onDone }) {
           }}>Back</button>
         )}
         {step < TUTORIAL_STEPS.length - 1 ? (
-          <button onClick={() => setStep(step + 1)} style={{
+          <button onClick={() => { setStep(step + 1); setSeqIndex(0); }} style={{
             flex: 2, padding: '12px', borderRadius: 10,
             background: COLOR + '20', border: `1px solid ${COLOR}40`,
             color: '#e8e8ec', fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -369,6 +368,7 @@ export default function DualNBack() {
   const [showingStimulus, setShowingStimulus] = useState(false);
 
   const seqRef = useRef(null);
+  const [seqLength, setSeqLength] = useState(0);
   const statsRef = useRef({
     posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
     audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
@@ -509,6 +509,7 @@ export default function DualNBack() {
     preloadLetters(nbackVoiceRef.current); // warm the pre-rendered letter audio (inside this gesture)
     const seq = generateSequence(trialCount + nLevel, nLevel);
     seqRef.current = seq;
+    setSeqLength(seq.positions.length);
     statsRef.current = {
       posHits: 0, posMisses: 0, posFalseAlarms: 0, posCorrectRejects: 0,
       audHits: 0, audMisses: 0, audFalseAlarms: 0, audCorrectRejects: 0,
@@ -545,7 +546,7 @@ export default function DualNBack() {
   // Cleanup any pending timers on unmount
   useEffect(() => () => clearTimers(), [clearTimers]);
 
-  const totalTrials = seqRef.current ? seqRef.current.positions.length : trialCount + nLevel;
+  const totalTrials = seqLength || trialCount + nLevel;
   const progress = gameState === 'playing' ? currentTrial / totalTrials : 0;
 
   return (
