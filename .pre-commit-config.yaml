@@ -1,0 +1,40 @@
+# fleet-precommit-template: v1
+# Baseline item 02 of controls-not-conventions.html: every repo gets a pre-commit
+# config with a secret scan. Install once per repo with:  pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-json            # JSON validity
+        # .devcontainer files are JSONC by spec -- comments are legal there, so
+        # strict JSON validation is the wrong check for them, not a finding.
+        exclude: ^\.devcontainer/
+      - id: check-yaml            # YAML validity
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-added-large-files   # large-file guard
+        args: [--maxkb=2048]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.6
+    hooks:
+      # Linter, scoped to the high-signal rules that are true defects in any codebase:
+      # E9 syntax errors, F63/F7 broken constructs, F82 undefined names.
+      # This is the same selection phi-scrubber's CI lints with.
+      - id: ruff-check
+        args: [--select, "E9,F63,F7,F82", --no-cache]
+      # Formatter -- OFF by default, deliberately. Measured on storm-core, enabling
+      # it rewrote 6 of 9 source files on first run, so every future commit that
+      # touches an old file would carry unrelated reformat noise. Adopting it is a
+      # per-repo decision: run `ruff format .` once, commit that as its own commit,
+      # then uncomment the hook below so it only ever touches new drift.
+      # - id: ruff-format
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks             # secret scan
